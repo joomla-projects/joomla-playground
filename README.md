@@ -27,14 +27,17 @@ sent to a server.
   used to be part of Joomla. It opens on its list in the administrator.
 - **Guided tours of the User Guide:** tutorials of the [Joomla User Guide](https://guide.joomla.org/tutorials) as
   guided tours. Each link opens a playground in the language of the tour, and the tour starts by itself. The tour
-  shows the way to each page through the menu, and waits for you to do each step.
+  shows the way to each page through the menu, and waits for you to do each step. All 34 tutorials of chapters 2 to 12,
+  in English, German, Spanish, French, Italian, Dutch, Portuguese and Brazilian Portuguese, are in the
+  [list of tours](web/public/blueprints/tours/README.md). For example:
   - *Create an Article and a Menu Item:* [English](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/en/create-article-and-menu-item.json), [Deutsch](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/de/create-article-and-menu-item.json), [Español](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/es/create-article-and-menu-item.json), [Français](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fr/create-article-and-menu-item.json), [Italiano](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/it/create-article-and-menu-item.json), [Nederlands](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/create-article-and-menu-item.json), [Português](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/create-article-and-menu-item.json), [Português do Brasil](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/create-article-and-menu-item.json).
   - *Multilingual Site: Add a Language* (adds Spanish to a site in English and Dutch):
     [English](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/en/multilingual-site-add-a-language.json).
 
   The blueprints are in [web/public/blueprints/tours/](web/public/blueprints/tours/), one folder per language. They
-  also make two changes to the Guided Tours plugin of Joomla: the tour does not start again inside dialogs such as
-  *Menu Item Type*, and a tour of an earlier playground in the same tab does not continue halfway.
+  also make three changes to the Guided Tours plugin of Joomla: the tour does not start again inside dialogs such as
+  *Menu Item Type*, a tour of an earlier playground in the same tab does not continue halfway, and the editor's
+  dialogs and Joomla's *Preview* come above the tour's overlay, so they can be clicked.
 
 ## Logging in
 
