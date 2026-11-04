@@ -25,6 +25,16 @@ sent to a server.
 - **Weblinks:** <https://joomla-projects.github.io/joomla-playground/?blueprint=weblinks>. Joomla with
   [Weblinks](https://github.com/joomla-extensions/weblinks) installed, the component for a directory of links that
   used to be part of Joomla. It opens on its list in the administrator.
+- **Guided tours of the User Guide:** tutorials of the [Joomla User Guide](https://guide.joomla.org/tutorials) as
+  guided tours. Each link opens a playground in the language of the tour, and the tour starts by itself. The tour
+  shows the way to each page through the menu, and waits for you to do each step.
+  - *Create an Article and a Menu Item:* [English](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/en/create-article-and-menu-item.json), [Deutsch](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/de/create-article-and-menu-item.json), [Español](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/es/create-article-and-menu-item.json), [Français](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fr/create-article-and-menu-item.json), [Italiano](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/it/create-article-and-menu-item.json), [Nederlands](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/create-article-and-menu-item.json), [Português](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/create-article-and-menu-item.json), [Português do Brasil](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/create-article-and-menu-item.json).
+  - *Multilingual Site: Add a Language* (adds Spanish to a site in English and Dutch):
+    [English](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/en/multilingual-site-add-a-language.json).
+
+  The blueprints are in [web/public/blueprints/tours/](web/public/blueprints/tours/), one folder per language. They
+  also make two changes to the Guided Tours plugin of Joomla: the tour does not start again inside dialogs such as
+  *Menu Item Type*, and a tour of an earlier playground in the same tab does not continue halfway.
 
 ## Logging in
 
