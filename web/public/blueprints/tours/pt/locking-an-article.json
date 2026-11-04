@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "title": "Trancar um artigo",
+    "description": "Joomla with the guided tour \"Trancar um artigo\"."
+  },
+  "preferredVersions": {
+    "joomla": "6.2"
+  },
+  "landingPage": "/administrator/index.php",
+  "steps": [
+    {
+      "step": "setSiteLanguage",
+      "language": "pt-PT",
+      "administrator": true
+    },
+    {
+      "step": "addArticle",
+      "title": "Câmara Municipal Aprova Novo Orçamento de Transportes",
+      "alias": "city-council-approves-new-transit-budget",
+      "text": "<p>A câmara municipal aprovou o novo orçamento de transportes.</p>",
+      "category": "uncategorised",
+      "featured": false,
+      "language": "*"
+    },
+    {
+      "step": "runPHP",
+      "code": "$file = 'plugins/system/guidedtours/src/Extension/GuidedTours.php';\n$php = file_get_contents($file);\n$php = str_replace('if ($user != null && $user->id > 0) {', 'if ($user != null && $user->id > 0 && $app->getInput()->getCmd(\\'tmpl\\') !== \\'component\\') {', $php);\n$token = '$doc->addScriptOptions(\\'com_guidedtours.token\\', Session::getFormToken());';\n$php = str_replace($token, $token . \"\\n\" . '$doc->addScriptDeclaration(\\'if (sessionStorage.getItem(\"tourToken\") !== \"\\' . Session::getFormToken() . \\'\") { [\"tourId\", \"currentStepId\", \"stepCount\", \"autoTourId\", \"tourToken\", \"skipTour\"].forEach((key) => sessionStorage.removeItem(key)); }\\');'\n    . \"\\n\" . '$doc->getWebAssetManager()->addInlineStyle(\\'.tox-tinymce-aux, .joomla-modal { z-index: 9998 !important; }\\');', $php);\nfile_put_contents($file, $php);"
+    },
+    {
+      "step": "runSql",
+      "sql": "UPDATE `#__guidedtours` SET `autostart` = 0;\nINSERT INTO `#__guidedtours` (`title`, `uid`, `description`, `ordering`, `extensions`, `url`, `created`, `created_by`, `modified`, `modified_by`, `published`, `language`, `note`, `access`, `autostart`) VALUES ('Trancar um artigo', 'joomlaguide-locking-an-article-pt', '<p>Quando alguém edita um artigo, o Joomla <em>bloqueia-o</em>: fica trancado, para que mais ninguém o possa alterar ao mesmo tempo. Guardar ou fechar o artigo <em>valida-o</em> e desbloqueia-o outra vez.</p><p>Se quem edita sair sem guardar nem fechar, o artigo fica trancado. Nesta visita vê como isso acontece e como um administrador o desbloqueia.</p><p>Esta visita segue o tutorial <a href=\"https://guide.joomla.org/pt/tutoriais/gestao-de-conteudos/7-publicacao-e-acesso/7-5-trancar-um-artigo\" target=\"_blank\" rel=\"noopener\">7.5 Trancar um Artigo</a> do Guia do Utilizador do Joomla.</p>', 1, '[\"com_cpanel\",\"com_content\"]', 'administrator/index.php', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', 'Joomla User Guide: 7.5 Locking an Article', 1, 1);\nINSERT INTO `#__guidedtour_steps` (`tour_id`, `title`, `description`, `ordering`, `position`, `target`, `type`, `interactive_type`, `url`, `created`, `created_by`, `modified`, `modified_by`, `published`, `language`, `note`, `params`) VALUES\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Conteúdos', '<p>No menu à esquerda, clique em <strong>Conteúdos</strong>.</p><p>Abre-se e mostra o que pode fazer aí.</p>', 1, 'right', 'body.com_cpanel #sidebarmenu li.item-level-1:has(a[href=\"index.php?option=com_content&view=articles\"]) > a.has-arrow', 2, 4, 'administrator/index.php', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Conteúdos › Artigos', '<p>Clique em <strong>Artigos</strong>, em <strong>Conteúdos</strong>.</p>', 2, 'right', 'body.com_cpanel #sidebarmenu a[href=\"index.php?option=com_content&view=articles\"]', 2, 1, 'administrator/index.php', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Abrir o artigo', '<p>Clique em <strong>Câmara Municipal Aprova Novo Orçamento de Transportes</strong> para o editar.</p>', 3, 'right', '#articleList tr:has(a[href*=\"task=article.edit\"][title$=\" Câmara Municipal Aprova Novo Orçamento de Transportes\"]) a[href*=\"task=article.edit\"]', 2, 1, 'administrator/index.php?option=com_content&view=articles', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Sair sem fechar', '<p>Está agora a editar o artigo. Não clique em <strong>Guardar</strong> nem em <strong>Fechar</strong>: prima o botão <em>Retroceder</em> do seu navegador. É o que faz quem sai sem fechar.</p><p>De volta à lista, o artigo tem um cadeado: está bloqueado. Passe o rato por cima do cadeado para ver quem o bloqueou, e quando. (Não há cadeado? Volte a carregar a página.)</p>', 4, 'right', '#articleList tr:has(a[href*=\"task=article.edit\"][title$=\" Câmara Municipal Aprova Novo Orçamento de Transportes\"]) th', 0, 1, 'administrator/index.php?option=com_content&view=articles', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Quem o pode editar?', '<p>Foi o utilizador que bloqueou o artigo, por isso ainda o pode abrir. Os outros utilizadores, mesmo administradores, recebem uma mensagem de erro quando tentam.</p><p>Quando clicar em <strong>Fechar</strong> ou <strong>Guardar e fechar</strong> no artigo, ele é desbloqueado outra vez.</p>', 5, 'bottom', '#articleList tr:has(a[href*=\"task=article.edit\"][title$=\" Câmara Municipal Aprova Novo Orçamento de Transportes\"])', 0, 1, 'administrator/index.php?option=com_content&view=articles', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Desbloquear o artigo', '<p>Aqui quem editava não voltou. Como administrador pode desbloquear o artigo: clique no cadeado.</p>', 6, 'right', '#articleList tr:has(a[href*=\"task=article.edit\"][title$=\" Câmara Municipal Aprova Novo Orçamento de Transportes\"]) [data-item-task=\"articles.checkin\"]', 2, 1, 'administrator/index.php?option=com_content&view=articles', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL),\n((SELECT `id` FROM `#__guidedtours` WHERE `uid` = 'joomlaguide-locking-an-article-pt'), 'Muito bem!', '<p>O artigo está desbloqueado, e qualquer pessoa com permissão o pode voltar a editar.</p><p>Para desbloquear muitos artigos de uma vez, assinale as suas caixas de verificação e escolha <strong>Ações</strong> › <strong>Validar</strong>.</p><p>Tenha cuidado: se quem edita ainda estiver a trabalhar no artigo, as suas alterações podem perder-se.</p>', 7, 'bottom', '#system-message-container', 0, 1, 'administrator/index.php?option=com_content&view=articles', CURRENT_TIMESTAMP(), 0, CURRENT_TIMESTAMP(), 0, 1, '*', '', NULL);"
+    }
+  ]
+}
