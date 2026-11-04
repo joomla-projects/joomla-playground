@@ -29,7 +29,7 @@
     },
     {
       "step": "runPHP",
-      "code": "$file = 'plugins/system/guidedtours/src/Extension/GuidedTours.php';\n$php = file_get_contents($file);\n$php = str_replace('if ($user != null && $user->id > 0) {', 'if ($user != null && $user->id > 0 && $app->getInput()->getCmd(\\'tmpl\\') !== \\'component\\') {', $php);\n$token = '$doc->addScriptOptions(\\'com_guidedtours.token\\', Session::getFormToken());';\n$php = str_replace($token, $token . \"\\n\" . '$doc->addScriptDeclaration(\\'if (sessionStorage.getItem(\"tourToken\") !== \"\\' . Session::getFormToken() . \\'\") { [\"tourId\", \"currentStepId\", \"stepCount\", \"autoTourId\", \"tourToken\", \"skipTour\"].forEach((key) => sessionStorage.removeItem(key)); }\\');', $php);\nfile_put_contents($file, $php);"
+      "code": "$file = 'plugins/system/guidedtours/src/Extension/GuidedTours.php';\n$php = file_get_contents($file);\n$php = str_replace('if ($user != null && $user->id > 0) {', 'if ($user != null && $user->id > 0 && $app->getInput()->getCmd(\\'tmpl\\') !== \\'component\\') {', $php);\n$token = '$doc->addScriptOptions(\\'com_guidedtours.token\\', Session::getFormToken());';\n$php = str_replace($token, $token . \"\\n\" . '$doc->addScriptDeclaration(\\'if (sessionStorage.getItem(\"tourToken\") !== \"\\' . Session::getFormToken() . \\'\") { [\"tourId\", \"currentStepId\", \"stepCount\", \"autoTourId\", \"tourToken\", \"skipTour\"].forEach((key) => sessionStorage.removeItem(key)); }\\');'\n    . \"\\n\" . '$doc->getWebAssetManager()->addInlineStyle(\\'.tox-tinymce-aux, .joomla-modal { z-index: 9998 !important; }\\');', $php);\nfile_put_contents($file, $php);"
     },
     {
       "step": "runSql",
