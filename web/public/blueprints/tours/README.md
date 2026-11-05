@@ -18,6 +18,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Een artikel en een menu-item maken](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/create-article-and-menu-item.json) | 16 |
 | Português | [Criar um artigo e um item de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/create-article-and-menu-item.json) | 16 |
 | Português do Brasil | [Criar um artigo e um item de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/create-article-and-menu-item.json) | 16 |
+| Русский | [Создание материала и пункта меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/create-article-and-menu-item.json) | 16 |
+| فارسی | [ایجاد یک مطلب و یک آیتم منو](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/create-article-and-menu-item.json) | 16 |
 
 ## 2.2 Creating a Category and Sub-Category
 
@@ -31,6 +33,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Een categorie en sub-categorieën maken](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/category.json) | 29 |
 | Português | [Criar uma categoria e subcategorias](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/category.json) | 29 |
 | Português do Brasil | [Criar uma categoria e subcategorias](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/category.json) | 29 |
+| Русский | [Создание категории и подкатегории](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/category.json) | 29 |
+| فارسی | [ایجاد یک مجموعه و زیرمجموعه](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/category.json) | 29 |
 
 ## 2.3 Menu items for a Category of Articles
 
@@ -44,6 +48,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Menu-items voor een categorie van artikelen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/category-menu-item.json) | 14 |
 | Português | [Itens de menu para uma categoria de artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/category-menu-item.json) | 14 |
 | Português do Brasil | [Itens de menu para uma categoria de artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/category-menu-item.json) | 14 |
+| Русский | [Пункты меню для категории материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/category-menu-item.json) | 14 |
+| فارسی | [آیتم‌های منو برای یک مجموعه از مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/category-menu-item.json) | 14 |
 
 ## 2.4 Featuring Articles on the Homepage
 
@@ -57,6 +63,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Artikelen uitlichten op de startpagina](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/featured-articles.json) | 11 |
 | Português | [Destacar artigos na página inicial](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/featured-articles.json) | 11 |
 | Português do Brasil | [Destacar artigos na página inicial](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/featured-articles.json) | 11 |
+| Русский | [Избранные материалы на главной странице](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/featured-articles.json) | 11 |
+| فارسی | [نمایش ویژه مطالب در صفحه اصلی](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/featured-articles.json) | 11 |
 
 ## 2.5 Save to Menu
 
@@ -70,6 +78,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Opslaan in menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/save-to-menu.json) | 20 |
 | Português | [Guardar no menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/save-to-menu.json) | 20 |
 | Português do Brasil | [Salvar no menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/save-to-menu.json) | 20 |
+| Русский | [Сохранение в меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/save-to-menu.json) | 20 |
+| فارسی | [ذخیره در منو](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/save-to-menu.json) | 20 |
 
 ## 3.1 Bold, Italic and More
 
@@ -83,6 +93,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Vet, cursief en meer](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/bold-italic-and-more.json) | 12 |
 | Português | [Negrito, itálico e mais](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/bold-italic-and-more.json) | 12 |
 | Português do Brasil | [Negrito, itálico e mais](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/bold-italic-and-more.json) | 12 |
+| Русский | [Полужирный, курсив и другое](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/bold-italic-and-more.json) | 12 |
+| فارسی | [پررنگ، ایتالیک و موارد دیگر](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/bold-italic-and-more.json) | 12 |
 
 ## 3.2 Headings
 
@@ -96,6 +108,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Kopteksten](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/headings.json) | 14 |
 | Português | [Cabeçalhos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/headings.json) | 14 |
 | Português do Brasil | [Cabeçalhos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/headings.json) | 14 |
+| Русский | [Заголовки](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/headings.json) | 14 |
+| فارسی | [عنوان‌ها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/headings.json) | 14 |
 
 ## 3.3 Lists
 
@@ -109,6 +123,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Lijsten](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/lists.json) | 12 |
 | Português | [Listas](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/lists.json) | 12 |
 | Português do Brasil | [Listas](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/lists.json) | 12 |
+| Русский | [Списки](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/lists.json) | 12 |
+| فارسی | [لیست‌ها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/lists.json) | 12 |
 
 ## 3.4 Links
 
@@ -122,6 +138,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Links](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/links.json) | 12 |
 | Português | [Hiperligações](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/links.json) | 12 |
 | Português do Brasil | [Links](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/links.json) | 12 |
+| Русский | [Ссылки](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/links.json) | 12 |
+| فارسی | [پیوندها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/links.json) | 12 |
 
 ## 3.5 Tables
 
@@ -135,6 +153,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Tabellen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/tables.json) | 14 |
 | Português | [Tabelas](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/tables.json) | 14 |
 | Português do Brasil | [Tabelas](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/tables.json) | 14 |
+| Русский | [Таблицы](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/tables.json) | 14 |
+| فارسی | [جداول](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/tables.json) | 14 |
 
 ## 4.1 Embedding Images in Article Text
 
@@ -148,6 +168,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Afbeeldingen insluiten in artikeltekst](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/embedding-images-in-article-text.json) | 21 |
 | Português | [Incorporar imagens no texto do artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/embedding-images-in-article-text.json) | 21 |
 | Português do Brasil | [Incorporar imagens no texto do artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/embedding-images-in-article-text.json) | 21 |
+| Русский | [Встраивание изображений в текст материала](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/embedding-images-in-article-text.json) | 21 |
+| فارسی | [جاسازی تصاویر در متن مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/embedding-images-in-article-text.json) | 21 |
 
 ## 4.2 Managing Media
 
@@ -161,6 +183,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Media beheren](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/managing-media.json) | 14 |
 | Português | [Gerir media](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/managing-media.json) | 14 |
 | Português do Brasil | [Gerenciar mídia](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/managing-media.json) | 14 |
+| Русский | [Управление медиафайлами](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/managing-media.json) | 14 |
+| فارسی | [مدیریت تصویر](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/managing-media.json) | 14 |
 
 ## 4.3 Intro and Full Article Images
 
@@ -174,6 +198,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Intro- en volledige artikelafbeeldingen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/intro-image-full-article-image.json) | 38 |
 | Português | [Imagens introdutórias e de artigo completo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/intro-image-full-article-image.json) | 38 |
 | Português do Brasil | [Imagem de introdução e imagem de artigo completo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/intro-image-full-article-image.json) | 38 |
+| Русский | [Вводные изображения и изображения материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/intro-image-full-article-image.json) | 38 |
+| فارسی | [تصاویر مقدمه و مطلب کامل](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/intro-image-full-article-image.json) | 38 |
 
 ## 5.1 Filter Articles List on Properties
 
@@ -187,6 +213,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [De artikelenlijst filteren](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/filter-articles.json) | 22 |
 | Português | [Filtrar a lista de artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/filter-articles.json) | 22 |
 | Português do Brasil | [Filtrar a lista de artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/filter-articles.json) | 22 |
+| Русский | [Фильтрация списка материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/filter-articles.json) | 22 |
+| فارسی | [فیلتر لیست مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/filter-articles.json) | 22 |
 
 ## 5.2 Delete Articles from the Articles List
 
@@ -200,6 +228,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Artikelen verwijderen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/delete-articles.json) | 22 |
 | Português | [Eliminar artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/delete-articles.json) | 22 |
 | Português do Brasil | [Excluir artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/delete-articles.json) | 22 |
+| Русский | [Удаление материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/delete-articles.json) | 22 |
+| فارسی | [حذف مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/delete-articles.json) | 22 |
 
 ## 5.3 Archive Articles
 
@@ -213,6 +243,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Artikelen archiveren](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/archive-articles.json) | 35 |
 | Português | [Arquivar artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/archive-articles.json) | 35 |
 | Português do Brasil | [Arquivar artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/archive-articles.json) | 35 |
+| Русский | [Перемещение материалов в архив](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/archive-articles.json) | 35 |
+| فارسی | [بایگانی مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/archive-articles.json) | 35 |
 
 ## 6.1 Pagination
 
@@ -226,6 +258,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Paginering](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/pagination.json) | 7 |
 | Português | [Paginação](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/pagination.json) | 7 |
 | Português do Brasil | [Paginação](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/pagination.json) | 7 |
+| Русский | [Разбиение на страницы](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/pagination.json) | 7 |
+| فارسی | [صفحه‌بندی](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/pagination.json) | 7 |
 
 ## 6.2 Read More
 
@@ -239,6 +273,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Lees meer](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/read-more.json) | 6 |
 | Português | [Ler mais](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/read-more.json) | 6 |
 | Português do Brasil | [Leia Mais](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/read-more.json) | 6 |
+| Русский | [Подробнее](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/read-more.json) | 6 |
+| فارسی | [ادامه مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/read-more.json) | 6 |
 
 ## 7.1 Publishing Articles and Categories
 
@@ -252,6 +288,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Artikelen en categorieën publiceren](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/publishing-articles-and-categories.json) | 18 |
 | Português | [Publicação de artigos e categorias](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/publishing-articles-and-categories.json) | 18 |
 | Português do Brasil | [Publicar artigos e categorias](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/publishing-articles-and-categories.json) | 18 |
+| Русский | [Публикация материалов и категорий](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/publishing-articles-and-categories.json) | 18 |
+| فارسی | [انتشار مطالب و مجموعه‌ها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/publishing-articles-and-categories.json) | 18 |
 
 ## 7.2 Publishing Menu Items
 
@@ -265,6 +303,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Menu-items publiceren](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/publishing-menu-items.json) | 20 |
 | Português | [Publicar itens de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/publishing-menu-items.json) | 20 |
 | Português do Brasil | [Publicar itens de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/publishing-menu-items.json) | 20 |
+| Русский | [Публикация пунктов меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/publishing-menu-items.json) | 20 |
+| فارسی | [انتشار آیتم‌های منو](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/publishing-menu-items.json) | 20 |
 
 ## 7.3 Timed Publishing
 
@@ -278,6 +318,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Getimede publicatie](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/timed-publishing.json) | 14 |
 | Português | [Publicação temporizada](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/timed-publishing.json) | 14 |
 | Português do Brasil | [Publicação programada](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/timed-publishing.json) | 14 |
+| Русский | [Отложенная публикация](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/timed-publishing.json) | 14 |
+| فارسی | [انتشار زمان‌بندی‌شده](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/timed-publishing.json) | 14 |
 
 ## 7.4 Restrict Access to Articles
 
@@ -291,6 +333,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Toegang tot artikelen beperken](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/view-access-restrictions.json) | 13 |
 | Português | [Restringir o acesso a artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/view-access-restrictions.json) | 13 |
 | Português do Brasil | [Restringir o acesso a artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/view-access-restrictions.json) | 13 |
+| Русский | [Ограничение доступа к материалам](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/view-access-restrictions.json) | 13 |
+| فارسی | [محدود کردن دسترسی به مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/view-access-restrictions.json) | 13 |
 
 ## 7.5 Locking an Article
 
@@ -304,6 +348,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Een artikel vergrendelen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/locking-an-article.json) | 7 |
 | Português | [Trancar um artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/locking-an-article.json) | 7 |
 | Português do Brasil | [Bloquear um artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/locking-an-article.json) | 7 |
+| Русский | [Блокировка материала](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/locking-an-article.json) | 7 |
+| فارسی | [قفل کردن یک مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/locking-an-article.json) | 7 |
 
 ## 7.6 Edit Permissions for Articles
 
@@ -317,6 +363,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Bewerkingsrechten voor artikelen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/article-permissions.json) | 27 |
 | Português | [Permissões de edição para artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/article-permissions.json) | 27 |
 | Português do Brasil | [Permissões de edição para artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/article-permissions.json) | 27 |
+| Русский | [Права доступа на редактирование материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/article-permissions.json) | 27 |
+| فارسی | [ویرایش مجوزها برای مطالب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/article-permissions.json) | 27 |
 
 ## 8.1 SEF URLs
 
@@ -330,6 +378,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [SEF URL's](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/sef-urls.json) | 6 |
 | Português | [URL amigáveis](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/sef-urls.json) | 6 |
 | Português do Brasil | [URLs amigáveis (SEF)](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/sef-urls.json) | 6 |
+| Русский | [ЧПУ URL-адреса](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/sef-urls.json) | 6 |
+| فارسی | [آدرس‌های SEF](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/sef-urls.json) | 6 |
 
 ## 8.2 Different URLs for Content
 
@@ -343,6 +393,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Verschillende URL's voor inhoud](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/article-urls.json) | 32 |
 | Português | [URL diferentes para o conteúdo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/article-urls.json) | 32 |
 | Português do Brasil | [URLs diferentes para conteúdo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/article-urls.json) | 32 |
+| Русский | [Разные URL-адреса для материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/article-urls.json) | 32 |
+| فارسی | [آدرس‌های متفاوت برای محتوا](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/article-urls.json) | 32 |
 
 ## 9.1 Custom Module
 
@@ -356,6 +408,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Aangepaste module](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/custom-module.json) | 14 |
 | Português | [Módulo personalizado](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/custom-module.json) | 14 |
 | Português do Brasil | [Módulo personalizado](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/custom-module.json) | 14 |
+| Русский | [Пользовательский модуль](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/custom-module.json) | 14 |
+| فارسی | [ماژول سفارشی](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/custom-module.json) | 14 |
 
 ## 9.2 Module Display by Menu Item
 
@@ -369,6 +423,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Moduleweergave per menu-item](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/menu-item-modules.json) | 21 |
 | Português | [Exibir módulo por item de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/menu-item-modules.json) | 21 |
 | Português do Brasil | [Exibição de módulo por item de menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/menu-item-modules.json) | 21 |
+| Русский | [Отображение модуля по пункту меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/menu-item-modules.json) | 21 |
+| فارسی | [نمایش ماژول بر اساس آیتم منو](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/menu-item-modules.json) | 21 |
 
 ## 10.1 Submenus
 
@@ -382,6 +438,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Submenu's](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/submenus.json) | 28 |
 | Português | [Submenus](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/submenus.json) | 28 |
 | Português do Brasil | [Submenus](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/submenus.json) | 28 |
+| Русский | [Подменю](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/submenus.json) | 28 |
+| فارسی | [زیرمنوها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/submenus.json) | 28 |
 
 ## 10.2 Split Menus
 
@@ -395,6 +453,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Gesplitste menu's](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/split-menus.json) | 24 |
 | Português | [Dividir menus](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/split-menus.json) | 24 |
 | Português do Brasil | [Dividir menus](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/split-menus.json) | 24 |
+| Русский | [Разделение меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/split-menus.json) | 24 |
+| فارسی | [تقسیم منوها](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/split-menus.json) | 24 |
 
 ## 10.3 Article Display Options Hierarchy
 
@@ -408,6 +468,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Hiërarchie van weergaveopties voor artikelen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/display-options-hierarchy-article-category-menu-item.json) | 34 |
 | Português | [Hierarquia das opções de exibição de artigos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/display-options-hierarchy-article-category-menu-item.json) | 34 |
 | Português do Brasil | [Hierarquia das opções de exibição de artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/display-options-hierarchy-article-category-menu-item.json) | 34 |
+| Русский | [Иерархия параметров отображения материалов](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/display-options-hierarchy-article-category-menu-item.json) | 34 |
+| فارسی | [سلسله مراتب گزینه‌های نمایش مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/display-options-hierarchy-article-category-menu-item.json) | 34 |
 
 ## 10.4 Adding a New Menu
 
@@ -421,6 +483,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Een nieuw menu toevoegen](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/adding-a-new-menu.json) | 27 |
 | Português | [Adicionar um novo menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/adding-a-new-menu.json) | 27 |
 | Português do Brasil | [Adicionar um novo menu](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/adding-a-new-menu.json) | 27 |
+| Русский | [Создание нового меню](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/adding-a-new-menu.json) | 27 |
+| فارسی | [افزودن منو جدید](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/adding-a-new-menu.json) | 27 |
 
 ## 11.1 Content Tags
 
@@ -434,6 +498,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Inhoud tags](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/content-tags.json) | 34 |
 | Português | [Etiquetas de conteúdos](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/content-tags.json) | 34 |
 | Português do Brasil | [Tags de conteúdo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/content-tags.json) | 34 |
+| Русский | [Теги контента](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/content-tags.json) | 34 |
+| فارسی | [برچسب‌های مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/content-tags.json) | 34 |
 
 ## 12.1 Article Metadata
 
@@ -447,6 +513,8 @@ hold a link with the whole blueprint in it, which works without that site.
 | Nederlands | [Artikel metagegevens](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/nl/article-metadata.json) | 13 |
 | Português | [Metadados do artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt/article-metadata.json) | 13 |
 | Português do Brasil | [Metadados do artigo](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/pt-br/article-metadata.json) | 13 |
+| Русский | [Метаданные материала](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/ru/article-metadata.json) | 13 |
+| فارسی | [داده‌های متای مطلب](https://joomla-projects.github.io/joomla-playground/?blueprint-url=blueprints/tours/fa/article-metadata.json) | 13 |
 
 ## Multilingual Site: Add a Language
 
