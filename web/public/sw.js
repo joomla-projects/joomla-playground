@@ -93,8 +93,10 @@ async function runInPhp(request, scope) {
   const responseHeaders = new Headers();
 
   for (const [name, values] of Object.entries(response.headers)) {
-    // The PHP worker keeps the cookies; a service worker response cannot set them anyway.
-    if (name.toLowerCase() !== 'set-cookie') {
+    // The PHP worker keeps the cookies; a service worker response cannot set them anyway. X-Frame-Options: SAMEORIGIN,
+    // which Joomla sends by default, is checked against every frame above the Joomla frame: it would block Joomla when
+    // the playground itself is in an iframe on another site.
+    if (!['set-cookie', 'x-frame-options'].includes(name.toLowerCase())) {
       for (const value of values) {
         responseHeaders.append(name, value);
       }
