@@ -661,6 +661,38 @@ describe('Blueprints', () => {
     }
   });
 
+  test('?pr= opens the site with the Patch Tester and a button to apply the pull request', async () => {
+    const tab = await context.newPage();
+
+    // What GitHub says about the pull request (the test does not use GitHub's rate limit).
+    await tab.route('https://api.github.com/repos/joomla/joomla-cms/pulls/12345', (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ title: 'A test pull request', base: { ref: '6.2-dev' }, html_url: 'https://github.com/joomla/joomla-cms/pull/12345' }),
+      })
+    );
+
+    try {
+      await tab.goto(`${appUrl}?pr=12345`);
+
+      const result = await waitForPlayground(tab);
+
+      assert.equal(result.blueprintError, null);
+      await tab.waitForSelector('#pull-request-toggle:not([disabled])', { timeout: 60000 });
+      assert.equal(await tab.locator('#pull-request-link').textContent(), 'PR #12345');
+      assert.equal(await tab.locator('#pull-request-link').getAttribute('title'), 'A test pull request (6.2-dev)');
+      assert.equal(await tab.locator('#pull-request-toggle').textContent(), 'Apply patch');
+
+      // The site as it is, without the patch (applying it needs GitHub, so the test stops here).
+      const frame = await (await tab.waitForSelector('#joomla')).contentFrame();
+
+      await frame.waitForFunction(() => document.title.includes('Home Dashboard'), null, { timeout: 60000 });
+    } finally {
+      await tab.close();
+    }
+  });
+
   test('reports a wrong blueprint', async () => {
     const tab = await context.newPage();
 

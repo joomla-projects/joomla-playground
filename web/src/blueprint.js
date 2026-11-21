@@ -6,6 +6,10 @@
 //                                                                                     (web/public/blueprints/)
 //   ?php=8.3  ?url=/index.php  ?login=no  ?extension=<zip URL> (repeatable)  ?language=nl-NL
 //                                                                                     shortcuts, added on top
+//   ?pr=48895                                                                         a pull request of joomla-cms
+//                                                                                     to test: the Patch Tester
+//                                                                                     blueprint, and a button to
+//                                                                                     apply and revert it (main.js)
 //
 // A blueprint:
 //   {
@@ -50,8 +54,9 @@ export async function blueprintFromUrl(url) {
 
   if (fragment.startsWith('{')) {
     blueprint = parseJson(fragment, 'the blueprint in the URL');
-  } else if (params.get('blueprint-url') || params.get('blueprint')) {
-    const name = params.get('blueprint');
+  } else if (params.get('blueprint-url') || params.get('blueprint') || params.get('pr')) {
+    // A pull request without a blueprint gets the Patch Tester.
+    const name = params.get('blueprint') || (params.get('blueprint-url') ? null : 'patchtester');
 
     if (name && !/^[a-z0-9-]+$/.test(name)) {
       throw new Error(`Not a blueprint name: ${name}`);
@@ -84,6 +89,7 @@ export async function blueprintFromUrl(url) {
     login: params.get('login'),
     extensions: params.getAll('extension'),
     language: params.get('language'),
+    pullRequest: params.get('pr'),
   };
 
   if (!blueprint && !Object.values(shortcuts).some((value) => (Array.isArray(value) ? value.length : value))) {
@@ -97,6 +103,16 @@ export async function blueprintFromUrl(url) {
     blueprint.preferredVersions = { ...blueprint.preferredVersions };
     shortcuts.php && (blueprint.preferredVersions.php = shortcuts.php);
     shortcuts.joomla && (blueprint.preferredVersions.joomla = shortcuts.joomla);
+  }
+
+  if (shortcuts.pullRequest) {
+    if (!/^[1-9][0-9]*$/.test(shortcuts.pullRequest)) {
+      throw new Error(`Not a pull request number: ${shortcuts.pullRequest}`);
+    }
+
+    // The site as it is without the patch: the administrator, unless ?url= names the page the pull request changes.
+    blueprint.pullRequest = Number(shortcuts.pullRequest);
+    blueprint.landingPage = '/administrator/';
   }
 
   if (shortcuts.landingPage) {
@@ -129,7 +145,7 @@ export function validate(blueprint) {
   }
 
   for (const key of Object.keys(blueprint)) {
-    if (!KEYS.includes(key) && key !== 'baseUrl' && key !== 'source') {
+    if (!KEYS.includes(key) && !['baseUrl', 'source', 'pullRequest'].includes(key)) {
       throw new Error(`Unknown blueprint property "${key}"; known: ${KEYS.join(', ')}`);
     }
   }

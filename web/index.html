@@ -76,6 +76,9 @@
     #credentials { font-family: ui-monospace, Consolas, monospace; }
     .spacer { flex: 1; }
 
+    #pull-request:not([hidden]) { display: contents; }
+    #pull-request-link { color: var(--bar-text); }
+
     .separator {
       width: 1px;
       align-self: stretch;
@@ -227,6 +230,11 @@
       <ul id="sites-list"></ul>
     </details>
     <button id="mail" type="button" disabled title="The mails this site sent: they are caught, not delivered">Mail<span id="mail-count"></span></button>
+    <span id="pull-request" hidden>
+      <span class="separator"></span>
+      <a id="pull-request-link" target="_blank" rel="noopener"></a>
+      <button id="pull-request-toggle" type="button" disabled></button>
+    </span>
     <span id="status">Loading</span>
     <span class="spacer"></span>
     <span><span id="credentials-label">Super User:</span> <span id="credentials">…</span></span>
