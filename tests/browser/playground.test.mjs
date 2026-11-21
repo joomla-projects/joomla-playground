@@ -463,7 +463,7 @@ describe('Blueprints', () => {
 
   test('starts another Joomla version, with its own media files', async () => {
     const versions = JSON.parse(readFileSync(`${root}/web/dist/joomla/versions.json`, 'utf8'));
-    const other = versions.versions.find((bundle) => bundle.joomla !== versions.default);
+    const other = versions.versions.find((bundle) => bundle.joomla !== versions.default && !bundle.branch);
 
     if (!other) {
       return;
@@ -501,6 +501,37 @@ describe('Blueprints', () => {
     await missing.waitForSelector('#status.error', { timeout: 60000 });
     assert.match(await missing.locator('#status').textContent(), /Joomla 3 is not available/);
     await missing.close();
+  });
+
+  test('starts the development branch (?joomla=dev), a nightly build', async () => {
+    const versions = JSON.parse(readFileSync(`${root}/web/dist/joomla/versions.json`, 'utf8'));
+    const development = versions.versions.find((bundle) => bundle.branch);
+
+    if (!development) {
+      return;
+    }
+
+    assert.match(development.branch, /^\d+\.\d+-dev$/);
+    assert.equal(versions.versions[0], development, 'The development branch is the newest version');
+
+    const tab = await context.newPage();
+
+    try {
+      await tab.goto(`${appUrl}?joomla=dev`);
+
+      const result = await waitForPlayground(tab);
+
+      assert.equal(result.manifest.joomla, development.joomla);
+      assert.equal(await tab.inputValue('#joomla-version'), development.joomla);
+      assert.equal(await tab.locator('#joomla-version option:checked').textContent(), development.branch);
+      assert.ok((await tab.locator('#info').textContent()).startsWith(`Joomla ${development.development} `));
+
+      // The branch name works too, and "6" is still the newest release, not the development branch.
+      assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${development.branch}`, result.siteUrl)).manifest.joomla, development.joomla);
+      assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${development.joomla.split('.')[0]}`, null)).manifest.branch, undefined);
+    } finally {
+      await tab.close();
+    }
   });
 
   test('?language= installs a language pack and makes it the default', async () => {
@@ -720,6 +751,17 @@ async function waitForPlayground(target, previousSiteUrl = null) {
   assert.ok(result && result.siteUrl !== previousSiteUrl, await target.locator('#status').textContent());
 
   return result;
+}
+
+/**
+ * Opens a link in the tab and waits for its new playground.
+ */
+async function waitForPlaygroundAt(target, url, previousSiteUrl) {
+  const previous = previousSiteUrl ?? (await target.evaluate(() => window.joomlaPlayground?.siteUrl ?? null));
+
+  await target.goto(url);
+
+  return waitForPlayground(target, previous);
 }
 
 /**

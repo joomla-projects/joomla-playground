@@ -4,8 +4,9 @@ name: Deploy the playground
 # (Settings > Pages) before this workflow can deploy.
 #
 # Started by hand, or every day: then it deploys only when something the site is built from has changed since the
-# last deploy. That is the main branch (code, blueprints, joomla-versions.json) and the repositories the
-# prebuilt demos install from (web/public/blueprints/assets.json). Language packs are not checked.
+# last deploy. That is the main branch (code, blueprints, joomla-versions.json), the repositories the
+# prebuilt demos install from (web/public/blueprints/assets.json), and Joomla's development branch (6.3-dev), whose
+# nightly build the playground offers. Language packs are not checked.
 on:
   workflow_dispatch:
   schedule:
@@ -30,12 +31,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The latest commit of main and of every GitHub repository in assets.json.
+      # The latest commit of main, of every GitHub repository in assets.json, and of Joomla's development branch
+      # (the next minor version after the default; its nightly build is the development bundle, see
+      # bin/build-browser-bundles.php).
       - name: What the site is built from
         id: inputs
         run: |
           {
             echo "main $(git rev-parse HEAD)"
+            development=$(node -p "const [major, minor] = require('./joomla-versions.json').default.split('.'); major + '.' + (Number(minor) + 1) + '-dev'")
+            echo "joomla/joomla-cms $development $(git ls-remote https://github.com/joomla/joomla-cms "refs/heads/$development" | cut -f1)"
             for repository in $(grep -o 'https://github.com/[^/]*/[^/]*/archive/refs/heads/[^"]*' web/public/blueprints/assets.json | sort -u); do
               name=$(echo "$repository" | cut -d/ -f4-5)
               branch=$(basename "$repository" .zip)
@@ -73,7 +78,8 @@ jobs:
       - run: composer install --no-interaction --no-progress
       - run: npm ci --no-audit --no-fund
 
-      # One bundle per Joomla version in joomla-versions.json; the packages are downloaded from GitHub releases.
+      # One bundle per Joomla version in joomla-versions.json, from the releases on GitHub, and one of the development
+      # branch, from its nightly build.
       - name: Build the Joomla bundles and the playground
         run: |
           npm run bundle
