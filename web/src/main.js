@@ -39,10 +39,17 @@ const elements = {
   mailList: document.querySelector('#mail-list'),
   mailHeaders: document.querySelector('#mail-headers'),
   mailView: document.querySelector('#mail-view'),
+  pullRequest: document.querySelector('#pull-request'),
+  pullRequestLink: document.querySelector('#pull-request-link'),
+  pullRequestToggle: document.querySelector('#pull-request-toggle'),
 };
 
 let worker = null;
 let playground = null;
+
+/** The pull request of joomla-cms this playground tests (?pr=): { number, test }, or null; test is the id of the
+ *  Patch Tester's record while the pull request is applied. */
+let pullRequest = null;
 
 /**
  * The service worker serves the Joomla frame. It starts while PHP and the site are downloaded; only the frame waits
@@ -81,7 +88,7 @@ function setLoading(loading) {
 import(/* @vite-ignore */ new URL('joomla/joomla-core-loader.js', base).href).catch(() => {});
 
 function setBusy(busy) {
-  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php]) {
+  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php, elements.pullRequestToggle]) {
     button.disabled = busy;
   }
 
@@ -204,7 +211,7 @@ async function saveSite() {
     await call('save', { site, title });
 
     playground.site = site;
-    history.replaceState(null, '', `?site=${encodeURIComponent(site)}`);
+    history.replaceState(null, '', `?site=${encodeURIComponent(site)}${pullRequest ? `&pr=${pullRequest.number}` : ''}`);
     show();
   } catch (error) {
     setStatus(error.message, true);
@@ -468,7 +475,7 @@ async function newestServiceWorker(registration) {
  */
 async function prebuiltDemo(blueprint, url) {
   const name = blueprint?.source?.name;
-  const changed = ['fresh', 'php', 'joomla', 'url', 'login', 'extension', 'language'].some((key) => url.searchParams.has(key));
+  const changed = ['fresh', 'php', 'joomla', 'url', 'login', 'extension', 'language', 'pr'].some((key) => url.searchParams.has(key));
 
   if (!name || changed || url.hash.length > 1) {
     return null;
@@ -488,6 +495,157 @@ async function prebuiltDemo(blueprint, url) {
   } catch {
     // No prebuilt demo (e.g. vite's fallback page instead of JSON): run the blueprint.
     return null;
+  }
+}
+
+/**
+ * What GitHub says about a pull request of joomla-cms: { title, branch, url }, or null when GitHub does not answer
+ * (e.g. after 60 requests in an hour without a token). Kept for the tab, so starting over asks GitHub only once.
+ */
+async function pullRequestInfo(number) {
+  const key = `joomla-playground-pr-${number}`;
+
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(key));
+
+    if (cached) {
+      return cached;
+    }
+  } catch {
+    // No session storage: ask GitHub.
+  }
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/pulls/${number}`, { headers: { Accept: 'application/vnd.github+json' } });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const pull = await response.json();
+    const info = { title: pull.title, branch: pull.base?.ref ?? null, url: pull.html_url };
+
+    try {
+      sessionStorage.setItem(key, JSON.stringify(info));
+    } catch {
+      // Not kept: the next start asks again.
+    }
+
+    return info;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.2-dev"): that version, or the
+ * newest of the same major version, with a note when it is not the version the pull request is for.
+ *
+ * @returns {{joomla: string, note: string|null}|null}
+ */
+function joomlaForBranch(branch) {
+  const match = /^(\d+)\.(\d+)/.exec(branch ?? '');
+
+  if (!match) {
+    return null;
+  }
+
+  const available = bundles.versions.map((bundle) => bundle.joomla);
+  const exact = available.find((version) => version.startsWith(`${match[1]}.${match[2]}.`));
+
+  if (exact) {
+    return { joomla: exact, note: null };
+  }
+
+  const newest = (version) => version.split('.').map(Number);
+  const sameMajor = available.filter((version) => version.startsWith(`${match[1]}.`)).sort((a, b) => {
+    const [x, y] = [newest(a), newest(b)];
+
+    return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
+  })[0];
+
+  return {
+    joomla: sameMajor ?? bundles.default,
+    note: `The pull request is for ${branch}; this playground has Joomla ${sameMajor ?? bundles.default}, so the patch may not apply`,
+  };
+}
+
+/**
+ * Shows the pull request in the toolbar, with a button to apply or revert it.
+ */
+async function showPullRequest(number, info) {
+  pullRequest = { number, test: await call('pullRequestTest', { pullRequest: number }) };
+  elements.pullRequestLink.textContent = `PR #${number}`;
+  elements.pullRequestLink.href = info?.url ?? `https://github.com/joomla/joomla-cms/pull/${number}`;
+  elements.pullRequestLink.title = info ? `${info.title} (${info.branch})` : 'The pull request on GitHub';
+  elements.pullRequest.hidden = false;
+  renderPullRequest();
+}
+
+function renderPullRequest() {
+  elements.pullRequestToggle.textContent = pullRequest.test ? 'Revert patch' : 'Apply patch';
+  elements.pullRequestToggle.title = pullRequest.test
+    ? `Undo the changes of PR #${pullRequest.number}, and show this page again`
+    : `Apply the changes of PR #${pullRequest.number} with the Patch Tester, and show this page again`;
+}
+
+function loadFrame(src) {
+  return new Promise((resolve) => {
+    elements.frame.addEventListener('load', resolve, { once: true });
+    elements.frame.src = src;
+  });
+}
+
+/**
+ * Applies or reverts the pull request with the Patch Tester's own task, then shows the page that was open again:
+ * before and after, one click apart. On an error, the Patch Tester's page with its message stays.
+ */
+async function togglePullRequest() {
+  const { number, test } = pullRequest;
+  const applied = Boolean(test);
+  // The apply task takes the number of the pull request, the revert task the id of the test.
+  const [task, id] = applied ? ['revert', test] : ['apply', number];
+  let page = null;
+
+  try {
+    page = elements.frame.contentWindow.location.href;
+  } catch {
+    // Not the playground's page: show the administrator afterwards.
+  }
+
+  if (!page?.startsWith(`${playground.siteUrl}/`) || page.includes('option=com_patchtester')) {
+    page = `${playground.siteUrl}/administrator/`;
+  }
+
+  setBusy(true);
+  setLoading(true);
+  setStatus(applied ? `Reverting PR #${number}` : `Applying PR #${number} (the Patch Tester downloads its files from GitHub)`);
+
+  try {
+    await loadFrame(`${playground.siteUrl}/administrator/index.php?option=com_patchtester&task=${task}.${task}&pull_id=${id}`);
+    pullRequest.test = await call('pullRequestTest', { pullRequest: number });
+    renderPullRequest();
+
+    if (Boolean(pullRequest.test) !== applied) {
+      setStatus(`${readyStatus} · PR #${number} ${pullRequest.test ? 'applied' : 'reverted'}`);
+      await loadFrame(page);
+
+      return;
+    }
+
+    // The Patch Tester said why (or the administrator asks to log in): show its page.
+    const document = elements.frame.contentDocument;
+    const alerts = [...(document?.querySelectorAll('joomla-alert[type="danger"], joomla-alert[type="warning"], .alert-danger') ?? [])];
+    const reason = alerts.map((alert) => alert.querySelector('.alert-message')?.textContent ?? alert.textContent).join(' ').trim()
+      || (document?.title.startsWith('Error') ? document.title : '');
+    const login = document?.querySelector('form#form-login, input[name="username"]');
+
+    setStatus(login ? 'Log in to the administrator first' : `PR #${number} was not ${applied ? 'reverted' : 'applied'}${reason ? `: ${reason}` : ''}`, true);
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    setLoading(false);
+    setBusy(false);
   }
 }
 
@@ -521,6 +679,7 @@ async function start() {
   elements.importSite.onclick = () => elements.importFile.click();
   elements.importFile.onchange = () => elements.importFile.files[0] && importSite(elements.importFile.files[0]);
   elements.sitesMenu.ontoggle = () => elements.sitesMenu.open && renderSites();
+  elements.pullRequestToggle.onclick = togglePullRequest;
   elements.mail.onclick = () => {
     elements.mailDialog.showModal();
     renderMails();
@@ -552,17 +711,29 @@ async function start() {
     return;
   }
 
+  // A pull request picks the Joomla version of its branch, unless the link names one.
+  const info = blueprint?.pullRequest ? await pullRequestInfo(blueprint.pullRequest) : null;
+  const branch = info && !site && !url.searchParams.has('joomla') ? joomlaForBranch(info.branch) : null;
+
+  if (branch) {
+    blueprint.preferredVersions = { ...blueprint.preferredVersions, joomla: branch.joomla };
+  }
+
   const { joomla, warning } = await chooseJoomla(site, blueprint);
 
   await boot({ ...(site ? { site } : {}), joomla, php: blueprint?.preferredVersions?.php ?? null, blueprint });
 
-  if (warning) {
-    setStatus(warning, true);
+  if (blueprint?.pullRequest) {
+    await showPullRequest(blueprint.pullRequest, info);
+  }
+
+  if (warning ?? branch?.note) {
+    setStatus(warning ?? branch.note, true);
   }
 
   // A saved site remembers its PHP version: its address needs no ?php any more.
   if (site && url.searchParams.has('php')) {
-    history.replaceState(null, '', `?site=${encodeURIComponent(site)}`);
+    history.replaceState(null, '', `?site=${encodeURIComponent(site)}${pullRequest ? `&pr=${pullRequest.number}` : ''}`);
   }
 }
 

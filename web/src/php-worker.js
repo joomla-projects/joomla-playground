@@ -64,7 +64,7 @@ function serialized(task) {
   return run;
 }
 
-const actions = { boot, save, exportSite, flush };
+const actions = { boot, save, exportSite, flush, pullRequestTest };
 
 self.onmessage = async ({ data }) => {
   const action = actions[data?.type];
@@ -465,6 +465,27 @@ function scheduleSnapshot({ now: immediately = false } = {}) {
     snapshotTimer = null;
     serialized(() => state.dirty && snapshot(state.site)).catch((error) => console.error('Cannot save the site:', error));
   }, Math.max(0, Math.min(SNAPSHOT_DELAY, firstChange + SNAPSHOT_MAX_DELAY - now)));
+}
+
+/**
+ * The Patch Tester's test of a pull request of joomla-cms: the id of its row in #__patchtester_tests (which its revert
+ * task takes), or null when the pull request is not applied.
+ */
+async function pullRequestTest({ pullRequest }) {
+  const response = await serialized(() =>
+    runPhp(state.php, `
+      $db = new PDO('sqlite:' . ${JSON.stringify(DOCUMENT_ROOT)} . '/data/joomla.sqlite');
+      try {
+          $statement = $db->prepare('SELECT MAX(id) FROM jos_patchtester_tests WHERE pull_id = ?');
+          $statement->execute([${Number(pullRequest)}]);
+          echo (int) $statement->fetchColumn();
+      } catch (PDOException) {
+          echo 0;
+      }
+    `)
+  );
+
+  return { value: Number(response.text.trim()) || null };
 }
 
 /**

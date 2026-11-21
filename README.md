@@ -22,6 +22,13 @@ sent to a server.
   pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token in the Patch
   Tester's Options, GitHub allows 60 requests an hour; one Fetch Data uses about four. Never put a token in a
   blueprint: anyone with the link can read it.
+- **Test a pull request of Joomla:** <https://joomla-projects.github.io/joomla-playground/?pr=48831>. Joomla with
+  the Patch Tester, and in the toolbar a link to pull request 48831 and an **Apply patch** button. The site opens
+  without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
+  takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
+  changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
+  version of the pull request's branch (6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
+  CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
 - **Weblinks:** <https://joomla-projects.github.io/joomla-playground/?blueprint=weblinks>. Joomla with
   [Weblinks](https://github.com/joomla-extensions/weblinks) installed, the component for a directory of links that
   used to be part of Joomla. It opens on its list in the administrator.
@@ -107,6 +114,7 @@ A link can say how a new playground should look. Add these to the address:
 | `blueprint-url` | `?blueprint-url=https://example.org/blueprint.json` | Set up the site with a blueprint |
 | `blueprint` | `?blueprint=heritage-demo` | Set up the site with one of the playground's own blueprints (from its prebuilt copy, if it has one) |
 | `fresh` | `?blueprint=heritage-demo&fresh=1` | Run the blueprint, even if there is a prebuilt copy |
+| `pr` | `?pr=48831` | Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it |
 
 A **blueprint** is a small JSON file with the steps to set up a site. It can also be put in the address
 itself, after `#`. For example, this one installs Joomla's blog sample data, renames the site and opens the
