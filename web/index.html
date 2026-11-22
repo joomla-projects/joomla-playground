@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Joomla Playground</title>
+  <script>
+    // The address without parameters is the overview of the playground (overview/). A playground needs a parameter:
+    // ?new for an empty one, or ?blueprint=, ?pr=, ?site=, a blueprint after #, ... (see main.js and blueprint.js).
+    if (location.search.length < 2 && location.hash.length < 2) {
+      location.replace(new URL('overview/', location.href));
+    }
+  </script>
   <style>
     :root {
       --bar: #1c2b4a;

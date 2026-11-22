@@ -53,7 +53,7 @@ describe('Joomla Playground in the browser', () => {
     // The PHP worker logs every snapshot of a saved site (size and duration).
     page.on('console', (message) => message.text().startsWith('Snapshot of') && console.log(message.text()));
 
-    await page.goto(appUrl);
+    await page.goto(`${appUrl}?new`);
     await page.waitForFunction(() => window.joomlaPlayground || document.querySelector('#status.error'), null, { timeout: 180000 });
 
     playground = await page.evaluate(() => window.joomlaPlayground);
@@ -209,7 +209,7 @@ describe('Joomla Playground in the browser', () => {
     const second = await page.context().newPage();
 
     try {
-      await second.goto(appUrl);
+      await second.goto(`${appUrl}?new`);
       await second.waitForFunction(() => window.joomlaPlayground, null, { timeout: 180000 });
 
       const other = await second.evaluate(() => window.joomlaPlayground);
@@ -314,7 +314,7 @@ describe('Joomla Playground in the browser', () => {
     assert.ok(media.empty < 10, `${media.empty} empty files in media/`);
 
     // A new temporary playground does not have the article...
-    await page.goto(appUrl);
+    await page.goto(`${appUrl}?new`);
     const fresh = await waitForPlayground(page);
 
     assert.equal(fresh.site, null);
@@ -728,11 +728,13 @@ describe('Blueprints', () => {
     const tab = await context.newPage();
 
     try {
-      await tab.goto(`${appUrl}overview/`);
+      // The address without parameters is the overview.
+      await tab.goto(appUrl);
+      await tab.waitForURL(`${appUrl}overview/`);
 
       const start = await tab.locator('a.start').evaluate((link) => link.href);
 
-      assert.equal(start, appUrl);
+      assert.equal(start, `${appUrl}?new`);
       await tab.waitForSelector('#home-default-version:not(:text-is("Joomla"))', { timeout: 30000 });
 
       const demos = await tab.locator('.card a.open').evaluateAll((links) => links.map((link) => new URL(link.href).search));

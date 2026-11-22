@@ -1,6 +1,7 @@
 // The overview of the playground (overview/index.html, at .../overview/): the Joomla versions, the sites saved in
 // this browser, a form to test a pull request, and the guided tours of the Joomla User Guide. The demos and the other
-// links are plain HTML in overview/index.html. The playground itself is the folder above, as it always was.
+// links are plain HTML in overview/index.html. The playground is the folder above: the address without parameters
+// comes here, ?new and the other parameters start a playground.
 
 import { listSites } from './storage.js';
 

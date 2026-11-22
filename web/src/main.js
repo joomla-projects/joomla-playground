@@ -2,7 +2,8 @@
 // iframe and offers saving, exporting and importing playgrounds.
 //
 // ?site=<slug> opens a site saved in this browser; without it, a new temporary playground starts, set up by the
-// blueprint in the URL if there is one (see blueprint.js).
+// blueprint in the URL if there is one (see blueprint.js). ?new starts an empty one: the address without parameters
+// is the overview (index.html sends it on to overview/).
 
 import { deleteSite, freeSlug, isSiteOpen, listSites, readMeta, renameSite } from './storage.js';
 import { PHP_VERSIONS, blueprintFromUrl } from './blueprint.js';
@@ -249,7 +250,7 @@ async function importSite(file) {
   const bytes = await file.arrayBuffer();
 
   // An imported site starts as a temporary playground; it can be saved from there.
-  history.replaceState(null, '', base.pathname);
+  history.replaceState(null, '', `${base.pathname}?new`);
 
   try {
     // An export says which Joomla version it holds: use the bundle of that version, if there is one.
@@ -694,7 +695,7 @@ async function start() {
 
   elements.site.onclick = () => (elements.frame.src = `${playground.siteUrl}/`);
   elements.admin.onclick = () => (elements.frame.src = `${playground.siteUrl}/administrator/`);
-  elements.newSite.onclick = () => (location.href = base.pathname);
+  elements.newSite.onclick = () => (location.href = `${base.pathname}?new`);
   elements.reset.onclick = startOver;
   elements.php.replaceChildren(...PHP_VERSIONS.map((version) => new Option(version, version)));
   elements.php.onchange = switchPhp;
