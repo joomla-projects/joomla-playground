@@ -5,6 +5,9 @@ an idea, show something to someone, and throw it away, or keep it in your browse
 
 **Open it:** <https://joomla-projects.github.io/joomla-playground/>
 
+**Overview** of the demos, the guided tours, testing a pull request and the other possibilities:
+<https://joomla-projects.github.io/joomla-playground/overview/>. The title in the playground's toolbar links to it.
+
 After a few seconds you see Joomla's administrator, already logged in as a Super User. Everything runs in your
 browser: PHP is compiled to WebAssembly, and the site and its database live in the tab's memory. Nothing is
 sent to a server.

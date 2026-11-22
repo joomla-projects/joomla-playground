@@ -46,6 +46,13 @@
       font-weight: 600;
     }
 
+    header h1 a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    header h1 a:hover { text-decoration: underline; }
+
     header button {
       padding: 4px 12px;
       border: 1px solid var(--muted);
@@ -215,7 +222,7 @@
 </head>
 <body>
   <header>
-    <h1>Joomla Playground</h1>
+    <h1><a href="overview/" target="_blank" title="Overview: demos, guided tours, testing pull requests (opens in a new tab)">Joomla Playground</a></h1>
     <button id="open-site" type="button" disabled>Site</button>
     <button id="open-admin" type="button" disabled>Administrator</button>
     <span class="separator"></span>

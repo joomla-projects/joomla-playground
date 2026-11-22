@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Joomla Playground: overview</title>
+  <meta name="description" content="A complete Joomla site in your browser tab: no server, no installation, no account. Demos, guided tours of the Joomla User Guide, and testing pull requests.">
+  <style>
+    :root {
+      --navy: #1c2b4a;
+      --navy-text: #f2f5fa;
+      --navy-muted: #b9c4d8;
+      --accent: #f9a541;
+      --accent-text: #1c2b4a;
+      --page: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2633;
+      --muted: #5b6678;
+      --line: #dde3ee;
+      --link: #2a69b8;
+      color-scheme: light dark;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #121826;
+        --card: #1b2335;
+        --text: #e6ebf4;
+        --muted: #9aa6bb;
+        --line: #2c3750;
+        --link: #8db8f0;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    a { color: var(--link); }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .muted { color: var(--muted); }
+
+    /* The playground itself, prominently. */
+    .hero {
+      background: var(--navy);
+      color: var(--navy-text);
+      padding: 56px 0 48px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(32px, 6vw, 48px);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      max-width: 44em;
+      margin: 0 0 24px;
+      color: var(--navy-muted);
+      font-size: 18px;
+    }
+
+    .hero a { color: var(--navy-text); }
+
+    .start {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: var(--accent-text) !important;
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .start:hover, .start:focus-visible { filter: brightness(1.08); }
+
+    .start small {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .hero .versions {
+      margin: 16px 0 0;
+      font-size: 15px;
+    }
+
+    main { padding: 40px 0 24px; }
+
+    section { margin: 0 0 48px; }
+
+    h2 {
+      margin: 0 0 4px;
+      font-size: 24px;
+    }
+
+    h2 + p { margin-top: 0; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .card p { margin: 0; }
+
+    .card .open {
+      margin-top: auto;
+      padding-top: 8px;
+      font-weight: 600;
+    }
+
+    form.inline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      font: inherit;
+      color: var(--text);
+    }
+
+    input, select {
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--card);
+    }
+
+    button {
+      padding: 9px 20px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--navy);
+      color: var(--navy-text);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    ul.links {
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+      columns: 2 320px;
+      column-gap: 32px;
+    }
+
+    ul.links li {
+      break-inside: avoid;
+      padding: 4px 0;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--line);
+      font-size: 14px;
+    }
+
+    footer {
+      padding: 24px 0 40px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <h1>Joomla Playground</h1>
+      <p>A complete Joomla site in your browser tab: no server, no installation, no account. Try Joomla, test an
+        idea or a pull request, show something to someone, and throw it away, or keep it in your browser for later.</p>
+      <a class="start" href="../">Open the playground
+        <small><span id="home-default-version">Joomla</span>, logged in as Super User, ready in seconds</small></a>
+      <p class="versions" id="home-other-versions" hidden>Or start <span id="home-versions"></span>.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="home-sites" hidden>
+      <h2>Your saved sites</h2>
+      <p class="muted">Saved in this browser with <strong>Save…</strong> in the playground. They stay here only:
+        use <strong>Export</strong> in the playground to keep a copy elsewhere.</p>
+      <ul class="links" id="home-sites-list"></ul>
+    </section>
+
+    <section>
+      <h2>Demos</h2>
+      <p class="muted">Each link starts a playground of its own, already set up.</p>
+      <div class="cards">
+        <article class="card">
+          <h3>Multilingual site</h3>
+          <p>A site in English, Dutch, German, French and Spanish, about UNESCO World Heritage sites, with the
+            <a href="https://github.com/ceford/cefjdemos-plg-demodata">demonstration data</a> of Clifford E Ford.
+            Starts in a few seconds from a prebuilt copy.</p>
+          <a class="open" href="../?blueprint=heritage-demo">Open the multilingual site</a>
+        </article>
+        <article class="card">
+          <h3>Patch Tester</h3>
+          <p>Joomla with the <a href="https://github.com/joomla-extensions/patchtester">Patch Tester</a>: fetch the
+            open pull requests of Joomla from GitHub and apply one.</p>
+          <a class="open" href="../?blueprint=patchtester">Open the Patch Tester</a>
+        </article>
+        <article class="card">
+          <h3>Weblinks</h3>
+          <p>Joomla with <a href="https://github.com/joomla-extensions/weblinks">Weblinks</a>, the component for a
+            directory of links that used to be part of Joomla.</p>
+          <a class="open" href="../?blueprint=weblinks">Open Weblinks</a>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Test a pull request of Joomla</h2>
+      <p class="muted">The site opens without the patch. <strong>Apply patch</strong> in the toolbar applies it and
+        shows the same page again, now with the changes; <strong>Revert patch</strong> takes them out, so before and
+        after are one click apart. The playground starts the Joomla version of the pull request's branch.</p>
+      <form class="inline" id="home-pr-form">
+        <label>Pull request (number or address)
+          <input name="pr" required placeholder="48831" size="14" autocomplete="off"></label>
+        <label>Page to open (optional)
+          <input name="url" placeholder="/administrator/index.php?option=com_config" size="38" autocomplete="off"></label>
+        <button type="submit">Test it</button>
+      </form>
+      <p class="muted">As a link: <code>…/joomla-playground/?pr=48831</code>, with <code>&amp;url=</code> for the page.
+        Changes to JavaScript or CSS are not built, so only PHP, template, language and XML changes show. See the
+        <a href="https://github.com/joomla/joomla-cms/pulls">open pull requests</a>.</p>
+    </section>
+
+    <section>
+      <h2>Guided tours of the Joomla User Guide</h2>
+      <p class="muted">Tutorials of the <a href="https://guide.joomla.org/tutorials">Joomla User Guide</a> as guided
+        tours: each link opens a playground in the language of the tour, and the tour shows the way step by step.</p>
+      <div id="home-tours-picker">
+        <form class="inline" onsubmit="return false">
+          <label>Language <select id="home-tours-language"></select></label>
+        </form>
+        <ul class="links" id="home-tours-list"></ul>
+      </div>
+      <p class="muted">All tours and languages in one list:
+        <a href="https://github.com/joomla-projects/joomla-playground/blob/main/web/public/blueprints/tours/README.md">the list of tours</a>.</p>
+    </section>
+
+    <section>
+      <h2>Make your own link</h2>
+      <p class="muted">Parameters set up a new playground; combine them with <code>&amp;</code>.</p>
+      <ul class="links">
+        <li><a href="../?language=nl-NL">A site in Dutch</a> <code>?language=nl-NL</code></li>
+        <li><a href="../?php=8.5">PHP 8.5</a> <code>?php=8.5</code></li>
+        <li><a href="../?url=/index.php">Open the front end</a> <code>?url=/index.php</code></li>
+        <li><a href="../?login=no">Start logged out</a> <code>?login=no</code></li>
+        <li>Install an extension <code>?extension=&lt;zip URL&gt;</code></li>
+        <li>Your own blueprint <code>?blueprint-url=&lt;JSON URL&gt;</code></li>
+      </ul>
+      <p class="muted">A blueprint is a small JSON file with the steps to set up a site: install extensions, sample
+        data, languages, articles, settings. See
+        <a href="https://github.com/joomla-projects/joomla-playground#setting-up-a-playground-with-a-link">setting up a
+        playground with a link</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap muted">
+      Everything runs in your browser: PHP is compiled to WebAssembly, and the site and its database live in the tab.
+      Nothing is sent to a server. Use a recent Chrome, Edge or other Chromium browser.
+      <a href="https://github.com/joomla-projects/joomla-playground">Source and documentation on GitHub</a>.
+    </div>
+  </footer>
+
+  <script type="module" src="../src/overview.js"></script>
+</body>
+</html>

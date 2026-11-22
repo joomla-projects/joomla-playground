@@ -724,6 +724,39 @@ describe('Blueprints', () => {
     }
   });
 
+  test('the overview (overview/) links to the playground, its demos and the guided tours', async () => {
+    const tab = await context.newPage();
+
+    try {
+      await tab.goto(`${appUrl}overview/`);
+
+      const start = await tab.locator('a.start').evaluate((link) => link.href);
+
+      assert.equal(start, appUrl);
+      await tab.waitForSelector('#home-default-version:not(:text-is("Joomla"))', { timeout: 30000 });
+
+      const demos = await tab.locator('.card a.open').evaluateAll((links) => links.map((link) => new URL(link.href).search));
+
+      assert.deepEqual(demos, ['?blueprint=heritage-demo', '?blueprint=patchtester', '?blueprint=weblinks']);
+
+      // The tours, from their list: one link per tutorial, to a blueprint the playground serves.
+      await tab.waitForSelector('#home-tours-list a', { timeout: 30000 });
+
+      const tour = await tab.locator('#home-tours-list a').first().evaluate((link) => link.href);
+      const blueprint = new URL(new URL(tour).searchParams.get('blueprint-url'), appUrl);
+
+      assert.ok(tour.startsWith(`${appUrl}?blueprint-url=blueprints/tours/`), tour);
+      assert.equal((await fetch(blueprint)).status, 200, blueprint.href);
+
+      // Test a pull request: the form makes a ?pr= link (the playground it opens does not ask GitHub here).
+      await tab.route('https://api.github.com/**', (route) => route.fulfill({ status: 404, body: '' }));
+      await tab.fill('#home-pr-form input[name="pr"]', 'https://github.com/joomla/joomla-cms/pull/12345');
+      await Promise.all([tab.waitForURL(/\?pr=12345$/), tab.click('#home-pr-form button')]);
+    } finally {
+      await tab.close();
+    }
+  });
+
   test('reports a wrong blueprint', async () => {
     const tab = await context.newPage();
 
