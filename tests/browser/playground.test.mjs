@@ -53,7 +53,7 @@ describe('Joomla Playground in the browser', () => {
     // The PHP worker logs every snapshot of a saved site (size and duration).
     page.on('console', (message) => message.text().startsWith('Snapshot of') && console.log(message.text()));
 
-    await page.goto(appUrl);
+    await page.goto(`${appUrl}?new`);
     await page.waitForFunction(() => window.joomlaPlayground || document.querySelector('#status.error'), null, { timeout: 180000 });
 
     playground = await page.evaluate(() => window.joomlaPlayground);
@@ -209,7 +209,7 @@ describe('Joomla Playground in the browser', () => {
     const second = await page.context().newPage();
 
     try {
-      await second.goto(appUrl);
+      await second.goto(`${appUrl}?new`);
       await second.waitForFunction(() => window.joomlaPlayground, null, { timeout: 180000 });
 
       const other = await second.evaluate(() => window.joomlaPlayground);
@@ -314,7 +314,7 @@ describe('Joomla Playground in the browser', () => {
     assert.ok(media.empty < 10, `${media.empty} empty files in media/`);
 
     // A new temporary playground does not have the article...
-    await page.goto(appUrl);
+    await page.goto(`${appUrl}?new`);
     const fresh = await waitForPlayground(page);
 
     assert.equal(fresh.site, null);
@@ -719,6 +719,41 @@ describe('Blueprints', () => {
       const frame = await (await tab.waitForSelector('#joomla')).contentFrame();
 
       await frame.waitForFunction(() => document.title.includes('Home Dashboard'), null, { timeout: 60000 });
+    } finally {
+      await tab.close();
+    }
+  });
+
+  test('the overview (overview/) links to the playground, its demos and the guided tours', async () => {
+    const tab = await context.newPage();
+
+    try {
+      // The address without parameters is the overview.
+      await tab.goto(appUrl);
+      await tab.waitForURL(`${appUrl}overview/`);
+
+      const start = await tab.locator('a.start').evaluate((link) => link.href);
+
+      assert.equal(start, `${appUrl}?new`);
+      await tab.waitForSelector('#home-default-version:not(:text-is("Joomla"))', { timeout: 30000 });
+
+      const demos = await tab.locator('.card a.open').evaluateAll((links) => links.map((link) => new URL(link.href).search));
+
+      assert.deepEqual(demos, ['?blueprint=heritage-demo', '?blueprint=patchtester', '?blueprint=weblinks']);
+
+      // The tours, from their list: one link per tutorial, to a blueprint the playground serves.
+      await tab.waitForSelector('#home-tours-list a', { timeout: 30000 });
+
+      const tour = await tab.locator('#home-tours-list a').first().evaluate((link) => link.href);
+      const blueprint = new URL(new URL(tour).searchParams.get('blueprint-url'), appUrl);
+
+      assert.ok(tour.startsWith(`${appUrl}?blueprint-url=blueprints/tours/`), tour);
+      assert.equal((await fetch(blueprint)).status, 200, blueprint.href);
+
+      // Test a pull request: the form makes a ?pr= link (the playground it opens does not ask GitHub here).
+      await tab.route('https://api.github.com/**', (route) => route.fulfill({ status: 404, body: '' }));
+      await tab.fill('#home-pr-form input[name="pr"]', 'https://github.com/joomla/joomla-cms/pull/12345');
+      await Promise.all([tab.waitForURL(/\?pr=12345$/), tab.click('#home-pr-form button')]);
     } finally {
       await tab.close();
     }

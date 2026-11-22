@@ -3,7 +3,12 @@
 A complete Joomla site in your browser tab: no server, no installation, no account. Try a Joomla version, test
 an idea, show something to someone, and throw it away, or keep it in your browser for later.
 
-**Open it:** <https://joomla-projects.github.io/joomla-playground/>
+**Start here:** <https://joomla-projects.github.io/joomla-playground/>. That address shows the overview (at
+`/overview/`): the demos, the guided tours, testing a pull request and the other possibilities. The title in the
+playground's toolbar links to it.
+
+**Open an empty playground:** <https://joomla-projects.github.io/joomla-playground/?new>. Every address with
+parameters starts a playground (see [Setting up a playground with a link](#setting-up-a-playground-with-a-link)).
 
 After a few seconds you see Joomla's administrator, already logged in as a Super User. Everything runs in your
 browser: PHP is compiled to WebAssembly, and the site and its database live in the tab's memory. Nothing is

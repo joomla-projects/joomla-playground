@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Joomla Playground</title>
+  <script>
+    // The address without parameters is the overview of the playground (overview/). A playground needs a parameter:
+    // ?new for an empty one, or ?blueprint=, ?pr=, ?site=, a blueprint after #, ... (see main.js and blueprint.js).
+    if (location.search.length < 2 && location.hash.length < 2) {
+      location.replace(new URL('overview/', location.href));
+    }
+  </script>
   <style>
     :root {
       --bar: #1c2b4a;
@@ -45,6 +52,13 @@
       font-size: 16px;
       font-weight: 600;
     }
+
+    header h1 a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    header h1 a:hover { text-decoration: underline; }
 
     header button {
       padding: 4px 12px;
@@ -215,7 +229,7 @@
 </head>
 <body>
   <header>
-    <h1>Joomla Playground</h1>
+    <h1><a href="overview/" target="_blank" title="Overview: demos, guided tours, testing pull requests (opens in a new tab)">Joomla Playground</a></h1>
     <button id="open-site" type="button" disabled>Site</button>
     <button id="open-admin" type="button" disabled>Administrator</button>
     <span class="separator"></span>
