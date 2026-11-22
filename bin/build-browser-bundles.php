@@ -139,13 +139,29 @@ echo "\nBundles: " . implode(', ', $all) . ' (default ' . $list['default'] . ")\
  */
 function developmentBranch(string $default): ?array
 {
-    $page = @file_get_contents('https://developer.joomla.org/nightly-builds.html');
+    // The page may fail now and then, or come without the list (seen once on GitHub Actions): try three times.
+    $source  = 'https://developer.joomla.org/nightly-builds.html';
+    $context = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Joomla Playground build (https://github.com/joomla-projects/joomla-playground)']]);
+    $pattern = '#https://developer\.joomla\.org/nightlies/Joomla_((\d+)\.(\d+)\.(\d+)[^"/]*)-Development-Full_Package\.zip#';
 
-    if ($page === false) {
-        fail('Cannot read https://developer.joomla.org/nightly-builds.html (--no-development builds without it)');
+    for ($attempt = 1; ; $attempt++) {
+        $page    = @file_get_contents($source, false, $context);
+        $matches = [];
+
+        if ($page !== false && preg_match_all($pattern, $page, $matches, PREG_SET_ORDER)) {
+            break;
+        }
+
+        $what = $page === false ? 'no answer' : \strlen($page) . ' bytes without nightly builds: ' . substr(preg_replace('/\s+/', ' ', strip_tags($page)), 0, 200);
+
+        if ($attempt === 3) {
+            fail("$source: $what (--no-development builds without the development branch)");
+        }
+
+        echo "  $source: $what; trying again in 20 seconds
+";
+        sleep(20);
     }
-
-    preg_match_all('#https://developer\.joomla\.org/nightlies/Joomla_((\d+)\.(\d+)\.(\d+)[^"/]*)-Development-Full_Package\.zip#', $page, $matches, PREG_SET_ORDER);
     [$major, $minor] = array_map('intval', explode('.', $default));
     $next = null;
 

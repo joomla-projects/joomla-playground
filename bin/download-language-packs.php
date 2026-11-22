@@ -29,7 +29,7 @@ $major   = explode('.', $joomla)[0];
 is_dir($out) || mkdir($out, 0755, true);
 is_dir($cache) || mkdir($cache, 0755, true);
 
-$list  = simplexml_load_string(fetch('https://update.joomla.org/language/translationlist_' . $major . '.xml'));
+$list  = fetchXml('https://update.joomla.org/language/translationlist_' . $major . '.xml');
 $packs = [];
 $bytes = 0;
 
@@ -37,7 +37,7 @@ foreach ($list->extension as $extension) {
     $tag = substr((string) $extension['element'], 4);
 
     try {
-        $update = bestUpdate(simplexml_load_string(fetch((string) $extension['detailsurl'])), $joomla);
+        $update = bestUpdate(fetchXml((string) $extension['detailsurl']), $joomla);
     } catch (RuntimeException $exception) {
         echo "  $tag: " . $exception->getMessage() . "\n";
         continue;
@@ -115,6 +115,27 @@ function fetch(string $url): string
         }
 
         sleep(2);
+    }
+}
+
+/**
+ * An XML file of update.joomla.org. Now and then it answers with something else (seen on GitHub Actions): then it
+ * tries again, twice.
+ */
+function fetchXml(string $url): SimpleXMLElement
+{
+    for ($attempt = 1; ; $attempt++) {
+        $xml = @simplexml_load_string(fetch($url));
+
+        if ($xml !== false) {
+            return $xml;
+        }
+
+        if ($attempt === 3) {
+            throw new RuntimeException('No XML at ' . $url);
+        }
+
+        sleep(5);
     }
 }
 
