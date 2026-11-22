@@ -415,7 +415,7 @@ function switchJoomla() {
 }
 
 /**
- * How the toolbar names a bundle: its version, or the branch of the development bundle ("6.3-dev").
+ * How the toolbar names a bundle: its version, or the branch of a development bundle ("6.3-dev", "6.2-dev").
  */
 function bundleLabel(bundle) {
   return bundle.branch ?? bundle.joomla;
@@ -423,8 +423,9 @@ function bundleLabel(bundle) {
 
 /**
  * The Joomla version to start: a saved site's own, the one a blueprint or ?joomla= asks for (a version or its
- * start, like "5" or "5.4"; "6.3-dev" or "dev" for the development branch), or the default. A release goes before
- * the development branch: "6" is the newest 6 release.
+ * start, like "5" or "5.4"; a branch like "6.2-dev" for its nightly build, "dev" for the development branch of the
+ * next minor version), or the default. A release goes before a development branch: "6" is the newest 6 release and
+ * "6.2" is 6.2.0, not the nightly build of 6.2-dev.
  */
 async function chooseJoomla(site, blueprint) {
   const available = bundles.versions.map((bundle) => bundle.joomla);
@@ -445,12 +446,15 @@ async function chooseJoomla(site, blueprint) {
     return { joomla: bundles.default };
   }
 
-  const development = bundles.versions.find((bundle) => bundle.branch);
+  // The development branches come first in versions.json, the next minor version's first.
+  const developments = bundles.versions.filter((bundle) => bundle.branch);
   const releases = bundles.versions.filter((bundle) => !bundle.branch).map((bundle) => bundle.joomla);
+  const branch = developments.find((bundle) => bundle.branch === String(wanted));
   const version = String(wanted).replace(/-dev$/, '');
   const joomla = ['dev', 'development'].includes(version)
-    ? development?.joomla
-    : [...releases, ...(development ? [development.joomla] : [])].find((candidate) => `${candidate}.`.startsWith(`${version}.`));
+    ? developments[0]?.joomla
+    : (branch?.joomla ??
+      [...releases, ...developments.map((bundle) => bundle.joomla)].find((candidate) => `${candidate}.`.startsWith(`${version}.`)));
 
   if (!joomla) {
     throw new Error(`Joomla ${wanted} is not available; choose ${bundles.versions.map(bundleLabel).join(', ')}`);
@@ -568,9 +572,9 @@ async function pullRequestInfo(number) {
 }
 
 /**
- * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.3-dev"): that version, or else the
- * newest one before it (for 7.0-dev the development branch 6.3-dev), with a note when it is not the version the pull
- * request is for.
+ * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.3-dev"): the nightly build of that
+ * branch, or else a release of its minor version, or else the newest version before it (for 7.0-dev the development
+ * branch 6.3-dev), with a note when it is not the version the pull request is for.
  *
  * @returns {{joomla: string, note: string|null}|null}
  */
@@ -581,8 +585,8 @@ function joomlaForBranch(branch) {
     return null;
   }
 
-  const available = bundles.versions.map((bundle) => bundle.joomla);
-  const exact = available.find((version) => version.startsWith(`${match[1]}.${match[2]}.`));
+  const nightly = bundles.versions.find((bundle) => bundle.branch === `${match[1]}.${match[2]}-dev`);
+  const exact = nightly?.joomla ?? bundles.versions.map((bundle) => bundle.joomla).find((version) => version.startsWith(`${match[1]}.${match[2]}.`));
 
   if (exact) {
     return { joomla: exact, note: null };

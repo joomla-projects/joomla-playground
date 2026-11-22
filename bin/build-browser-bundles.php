@@ -7,21 +7,27 @@
  * Builds a browser bundle (bin/build-browser-bundle.php) for every Joomla version in joomla-versions.json, and the
  * list the playground chooses from.
  *
- * Besides the releases, there is a bundle of the development branch: the nightly build of the next minor version
- * after the default (6.2.0 -> 6.3-dev), from https://developer.joomla.org/nightly-builds.html. Most pull requests of
- * joomla-cms are for that branch. When the next minor version is released and becomes the default
- * (scripts/update-joomla-versions.mjs), the development bundle moves on to the minor version after it.
+ * Besides the releases, there are bundles of the development branches, from their nightly builds on
+ * https://developer.joomla.org/nightly-builds.html:
+ * - the development branch: the next minor version after the default (6.2.0 -> 6.3-dev). Most pull requests of
+ *   joomla-cms are for that branch. When the next minor version is released and becomes the default
+ *   (scripts/update-joomla-versions.mjs), it moves on to the minor version after it.
+ * - the branch of each release in the list (6.2-dev, 5.4-dev): its next patch release. A pull request for such a
+ *   branch is tested against the branch as it is now, not against its last release.
  *
  * Usage:
  *   php bin/build-browser-bundles.php [--out=web/public/joomla] [--version=<one version>|development]
  *                                     [--no-languages] [--no-development]
  *
+ * --version=development builds the bundles of all development branches; --no-development builds none.
+ *
  * Output (in --out):
  *   <version>/     one bundle: site.zip, media/, manifest.json, and languages/ with the accredited language packs
- *                  (bin/download-language-packs.php), unless --no-languages. The development bundle is in the
- *                  folder of its version number (6.3.0/); its manifest has "branch": "6.3-dev" and the nightly's
- *                  version ("development": "6.3.0-alpha1-dev").
- *   versions.json  { "default": "6.2.0", "versions": [ <manifest of each bundle, the development branch first>, ... ] }
+ *                  (bin/download-language-packs.php), unless --no-languages. A bundle of a development branch is
+ *                  in the folder of its version number (6.3.0/, 6.2.1/); its manifest has the branch
+ *                  ("branch": "6.3-dev") and the nightly's version ("development": "6.3.0-alpha1-dev").
+ *   versions.json  { "default": "6.2.0", "versions": [ <manifest of each bundle: the development branches first,
+ *                  newest first, then the releases>, ... ] }
  *
  * A Full Package that is not in .cache/ yet is downloaded from the joomla/joomla-cms releases on GitHub; a nightly
  * build again when the one in .cache/ is older than 12 hours. At the end, the files of the playground's own
@@ -38,16 +44,13 @@ if (!\in_array($list['default'], $list['versions'], true)) {
     fail('joomla-versions.json: the default version is not in the list');
 }
 
-$development = isset($options['no-development']) ? null : developmentBranch($list['default']);
+// The development branches by the version number of their bundle.
+$developments = isset($options['no-development']) ? [] : array_column(developmentBranches($list), null, 'version');
 
-if ($development && \in_array($development['version'], $list['versions'], true)) {
-    fail('Joomla ' . $development['version'] . ' is released: update joomla-versions.json (scripts/update-joomla-versions.mjs)');
-}
-
-$all      = [...($development ? [$development['version']] : []), ...$list['versions']];
+$all      = [...array_keys($developments), ...$list['versions']];
 $versions = match ($options['version'] ?? null) {
     null          => $all,
-    'development' => $development ? [$development['version']] : fail('No development branch'),
+    'development' => $developments ? array_keys($developments) : fail('No development branch'),
     default       => [$options['version']],
 };
 
@@ -65,7 +68,9 @@ foreach ($versions as $version) {
         fail('Not a stable Joomla version: ' . $version);
     }
 
-    if ($version === ($development['version'] ?? null)) {
+    $development = $developments[$version] ?? null;
+
+    if ($development) {
         // A nightly build: downloaded again when the copy in .cache/ is older than 12 hours.
         $package = PLAYGROUND_ROOT . '/.cache/' . basename($development['url']);
 
@@ -80,7 +85,7 @@ foreach ($versions as $version) {
         }
     }
 
-    echo "== Joomla $version" . ($version === ($development['version'] ?? null) ? ' (' . $development['branch'] . ', nightly build ' . $development['nightly'] . ')' : '') . "\n";
+    echo "== Joomla $version" . ($development ? ' (' . $development['branch'] . ', nightly build ' . $development['nightly'] . ')' : '') . "\n";
     $process = proc_open(
         [PHP_BINARY, __DIR__ . '/build-browser-bundle.php', '--package=' . $package, '--out=' . $out . '/' . $version],
         [1 => STDOUT, 2 => STDERR],
@@ -107,7 +112,7 @@ foreach ($versions as $version) {
     // The playground uses the language packs of a bundle when its manifest counts them.
     $file     = $out . '/' . $version . '/manifest.json';
     $manifest = json_decode(file_get_contents($file), true);
-    $branch   = $version === ($development['version'] ?? null) ? ['branch' => $development['branch'], 'development' => $development['nightly']] : [];
+    $branch   = $development ? ['branch' => $development['branch'], 'development' => $development['nightly']] : [];
     file_put_contents($file, json_encode([...$manifest, ...$branch, 'languages' => $languages], JSON_PRETTY_PRINT) . "\n");
 }
 
@@ -132,12 +137,13 @@ proc_close($process) === 0 || fail('Downloading the files of the blueprints fail
 echo "\nBundles: " . implode(', ', $all) . ' (default ' . $list['default'] . ")\n";
 
 /**
- * The development branch after a release: the nightly build of the next minor version (6.2.0 -> 6.3), or else of
- * the next major version.
+ * The development branches, from their nightly builds: first the next minor version after the default (6.2.0 -> 6.3,
+ * or else the next major version), then the branch of each release in the list (6.2-dev, 5.4-dev), if it has a
+ * nightly build newer than that release.
  *
- * @return  array{version: string, branch: string, nightly: string, url: string}|null
+ * @return  list<array{version: string, branch: string, nightly: string, url: string}>
  */
-function developmentBranch(string $default): ?array
+function developmentBranches(array $list): array
 {
     // The page may fail now and then, or come without the list (seen once on GitHub Actions): try three times.
     $source  = 'https://developer.joomla.org/nightly-builds.html';
@@ -155,32 +161,59 @@ function developmentBranch(string $default): ?array
         $what = $page === false ? 'no answer' : \strlen($page) . ' bytes without nightly builds: ' . substr(preg_replace('/\s+/', ' ', strip_tags($page)), 0, 200);
 
         if ($attempt === 3) {
-            fail("$source: $what (--no-development builds without the development branch)");
+            fail("$source: $what (--no-development builds without the development branches)");
         }
 
-        echo "  $source: $what; trying again in 20 seconds
-";
+        echo "  $source: $what; trying again in 20 seconds\n";
         sleep(20);
     }
-    [$major, $minor] = array_map('intval', explode('.', $default));
-    $next = null;
 
-    foreach ($matches as [$url, $nightly, $nightlyMajor, $nightlyMinor, $patch]) {
-        $key = [(int) $nightlyMajor, (int) $nightlyMinor];
+    $nightlies = [];
 
+    foreach ($matches as [$url, $nightly, $major, $minor, $patch]) {
+        $nightlies["$major.$minor"] ??= ['key' => [(int) $major, (int) $minor], 'version' => "$major.$minor.$patch", 'branch' => "$major.$minor-dev", 'nightly' => $nightly, 'url' => $url];
+    }
+
+    $minorOf = static fn (string $version): array => array_map('intval', \array_slice(explode('.', $version), 0, 2));
+    $default = $minorOf($list['default']);
+    $next    = null;
+
+    foreach ($nightlies as $candidate) {
         // Newer than the default's minor version, and the closest to it.
-        if ($key > [$major, $minor] && (!$next || $key < $next['key'])) {
-            $next = ['key' => $key, 'version' => "$nightlyMajor.$nightlyMinor.$patch", 'branch' => "$nightlyMajor.$nightlyMinor-dev", 'nightly' => $nightly, 'url' => $url];
+        if ($candidate['key'] > $default && (!$next || $candidate['key'] < $next['key'])) {
+            $next = $candidate;
         }
     }
 
     if (!$next) {
-        fail('No nightly build newer than Joomla ' . $default . ' on https://developer.joomla.org/nightly-builds.html');
+        fail('No nightly build newer than Joomla ' . $list['default'] . ' on ' . $source);
     }
 
-    unset($next['key']);
+    if (\in_array($next['version'], $list['versions'], true)) {
+        fail('Joomla ' . $next['version'] . ' is released: update joomla-versions.json (scripts/update-joomla-versions.mjs)');
+    }
 
-    return $next;
+    $branches = [$next];
+
+    foreach ($list['versions'] as $release) {
+        $nightly = $nightlies[implode('.', $minorOf($release))] ?? null;
+
+        // A branch without a nightly build (no longer maintained), or whose nightly build is not newer than the
+        // release yet (just released): the release is all there is.
+        if (!$nightly || version_compare($nightly['version'], $release, '<=')) {
+            echo "== No nightly build newer than Joomla $release\n";
+
+            continue;
+        }
+
+        $branches[] = $nightly;
+    }
+
+    return array_map(static function (array $branch): array {
+        unset($branch['key']);
+
+        return $branch;
+    }, $branches);
 }
 
 function download(string $url, string $file): void

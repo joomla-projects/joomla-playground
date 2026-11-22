@@ -548,6 +548,18 @@ describe('Blueprints', () => {
       // The branch name works too, and "6" is still the newest release, not the development branch.
       assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${development.branch}`, result.siteUrl)).manifest.joomla, development.joomla);
       assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${development.joomla.split('.')[0]}`, null)).manifest.branch, undefined);
+
+      // The branch of a release (6.2-dev), when it has a nightly build: by its name, and "6.2" is still the release.
+      const maintenance = versions.versions.slice(1).find((bundle) => bundle.branch);
+
+      if (maintenance) {
+        const release = versions.versions.find((bundle) => !bundle.branch && `${bundle.joomla}`.startsWith(maintenance.branch.replace(/-dev$/, '.')));
+
+        assert.ok(release, `${maintenance.branch} is the branch of a release in the list`);
+        assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${maintenance.branch}`, null)).manifest.joomla, maintenance.joomla);
+        assert.equal(await tab.locator('#joomla-version option:checked').textContent(), maintenance.branch);
+        assert.equal((await waitForPlaygroundAt(tab, `${appUrl}?joomla=${maintenance.branch.replace(/-dev$/, '')}`, null)).manifest.joomla, release.joomla);
+      }
     } finally {
       await tab.close();
     }
@@ -727,8 +739,12 @@ describe('Blueprints', () => {
       await tab.goto(`${appUrl}?pr=12345`);
 
       const result = await waitForPlayground(tab);
+      // The pull request is for 6.2-dev: the nightly build of that branch if there is one, or else the 6.2 release.
+      const versions = JSON.parse(readFileSync(`${root}/web/dist/joomla/versions.json`, 'utf8'));
+      const expected = versions.versions.find((bundle) => bundle.branch === '6.2-dev') ?? versions.versions.find((bundle) => bundle.joomla.startsWith('6.2.'));
 
       assert.equal(result.blueprintError, null);
+      assert.equal(result.manifest.joomla, expected.joomla);
       await tab.waitForSelector('#pull-request-toggle:not([disabled])', { timeout: 60000 });
       assert.equal(await tab.locator('#pull-request-link').textContent(), 'PR #12345');
       assert.equal(await tab.locator('#pull-request-link').getAttribute('title'), 'A test pull request (6.2-dev)');
