@@ -414,8 +414,8 @@
       <h2>Test a pull request of Joomla</h2>
       <p class="muted">The site opens without the patch. <strong>Apply patch</strong> in the toolbar applies it and
         shows the same page again, now with the changes; <strong>Revert patch</strong> takes them out, so before and
-        after are one click apart. The playground starts the Joomla version of the pull request's branch, or says
-        when it does not have it.</p>
+        after are one click apart. The playground starts the nightly build of the pull request's branch (such as
+        6.2-dev): the branch as it is now, not its last release. It says when it does not have that branch.</p>
       <form class="inline" id="home-pr-form">
         <label>Pull request (number or address)
           <input name="pr" required placeholder="48831" size="14" autocomplete="off"></label>
@@ -479,9 +479,11 @@
       <p>On the right:</p>
       <ul class="plain">
         <li><strong>Joomla</strong> switches the Joomla version: a new temporary playground starts with it. The
-          <em>-dev</em> version is the development branch: the nightly build of the next minor version, which most
-          pull requests are for. It takes a new nightly build on days the branch has changed, and moves on after each
-          minor release. A saved site keeps the version it was made with.</li>
+          <em>-dev</em> versions are nightly builds of Joomla's branches. The newest is the development branch: the
+          next minor version, which most pull requests are for. The others (such as 6.2-dev and 5.4-dev) are the
+          branches of the releases, with the fixes for their next patch release. The playground takes a new nightly
+          build on days a branch has changed, and moves on after each release. A saved site keeps the version it
+          was made with.</li>
         <li><strong>PHP</strong> switches the PHP version (8.3, 8.4 or 8.5): a saved site reopens with it, a
           temporary playground starts again from the same link.</li>
         <li>The Super User's name and password. Hover over the database driver for timings.</li>
@@ -538,7 +540,7 @@
           <table>
             <thead><tr><th>Parameter</th><th>Example</th><th>What it does</th></tr></thead>
             <tbody>
-              <tr><td><code>joomla</code></td><td><code>?joomla=5.4</code></td><td>Joomla version; <code>5</code> also works. <code>?joomla=dev</code> is the development branch</td></tr>
+              <tr><td><code>joomla</code></td><td><code>?joomla=5.4</code></td><td>Joomla version; <code>5</code> also works. <code>?joomla=dev</code> is the development branch; a branch such as <code>?joomla=6.2-dev</code> is its nightly build, and <code>?joomla=6.2</code> the release</td></tr>
               <tr><td><code>php</code></td><td><code>?php=8.3</code></td><td>PHP version: 8.3, 8.4 (default) or 8.5</td></tr>
               <tr><td><code>url</code></td><td><code>?url=/index.php</code></td><td>The page to open first; default <code>/administrator/</code></td></tr>
               <tr><td><code>login</code></td><td><code>?login=no</code></td><td>Start logged out</td></tr>
