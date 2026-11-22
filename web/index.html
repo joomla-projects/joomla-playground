@@ -12,7 +12,37 @@
       --accent: #f9a541;
       --error: #ff8a80;
       --page: #ffffff;
+      --text: #1a1a1a;
+      --text-muted: #666666;
+      --link: #1a5fb4;
+      --link-border: #a7bfdc;
+      --danger: #a51d2d;
+      --danger-border: #c6a0a6;
+      --line: #dddddd;
+      --line-light: #eeeeee;
+      --selected: #e8f0fb;
+      --loading: #f2f5fa;
+      --loading-text: #1c2b4a;
       color-scheme: light;
+    }
+
+    /* Dark mode follows the browser, as Joomla's administrator does (the site's front end, Cassiopeia, has none). */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #1b2335;
+        --text: #e6ebf4;
+        --text-muted: #9aa6bb;
+        --link: #8db8f0;
+        --link-border: #46628a;
+        --danger: #ff8a80;
+        --danger-border: #7a4a4f;
+        --line: #2c3750;
+        --line-light: #253047;
+        --selected: #263552;
+        --loading: #0f151d;
+        --loading-text: #e6ebf4;
+        color-scheme: dark;
+      }
     }
 
     * { box-sizing: border-box; }
@@ -110,7 +140,7 @@
       padding: 6px 0;
       list-style: none;
       background: var(--page);
-      color: #1a1a1a;
+      color: var(--text);
       border-radius: 6px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
     }
@@ -122,12 +152,12 @@
       padding: 6px 12px;
     }
 
-    #sites-list li.empty { display: block; color: #666; }
-    #sites-list a { color: #1a5fb4; font-weight: 600; }
-    #sites-list .details { grid-column: 1; font-size: 12px; color: #666; }
+    #sites-list li.empty { display: block; color: var(--text-muted); }
+    #sites-list a { color: var(--link); font-weight: 600; }
+    #sites-list .details { grid-column: 1; font-size: 12px; color: var(--text-muted); }
     #sites-list .actions { grid-row: 1 / span 2; grid-column: 2; align-self: center; display: flex; gap: 6px; }
-    #sites-list button { color: #1a5fb4; border-color: #a7bfdc; }
-    #sites-list button.delete { color: #a51d2d; border-color: #c6a0a6; }
+    #sites-list button { color: var(--link); border-color: var(--link-border); }
+    #sites-list button.delete { color: var(--danger); border-color: var(--danger-border); }
 
     #mail-count:not(:empty) {
       margin-left: 4px;
@@ -145,7 +175,7 @@
       border: 0;
       border-radius: 8px;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
-      color: #1a1a1a;
+      color: var(--text);
       background: var(--page);
     }
 
@@ -160,25 +190,25 @@
       padding: 0;
       overflow: auto;
       list-style: none;
-      border-right: 1px solid #ddd;
+      border-right: 1px solid var(--line);
     }
 
-    #mail-list li { padding: 8px 12px; border-bottom: 1px solid #eee; cursor: pointer; }
-    #mail-list li.selected { background: #e8f0fb; }
-    #mail-list li.empty { color: #666; cursor: default; }
+    #mail-list li { padding: 8px 12px; border-bottom: 1px solid var(--line-light); cursor: pointer; }
+    #mail-list li.selected { background: var(--selected); }
+    #mail-list li.empty { color: var(--text-muted); cursor: default; }
     #mail-list .subject { font-weight: 600; }
-    #mail-list .meta { font-size: 12px; color: #666; }
+    #mail-list .meta { font-size: 12px; color: var(--text-muted); }
 
     #mail-view { display: grid; grid-template-rows: auto 1fr; min-height: 0; }
-    #mail-headers { margin: 0; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid #eee; }
-    #mail-headers dt { float: left; clear: left; width: 64px; color: #666; }
+    #mail-headers { margin: 0; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--line-light); }
+    #mail-headers dt { float: left; clear: left; width: 64px; color: var(--text-muted); }
     #mail-headers dd { margin-left: 72px; }
     #mail-text { margin: 0; padding: 12px; overflow: auto; white-space: pre-wrap; font: 13px ui-monospace, Consolas, monospace; }
     #mail-html { width: 100%; height: 100%; border: 0; }
 
     @media (max-width: 640px) {
       #mail-dialog .body { grid-template-columns: 1fr; grid-template-rows: 40% 1fr; }
-      #mail-list { border-right: 0; border-bottom: 1px solid #ddd; }
+      #mail-list { border-right: 0; border-bottom: 1px solid var(--line); }
     }
 
     #stage {
@@ -203,13 +233,13 @@
       align-items: center;
       justify-content: center;
       gap: 24px;
-      background: #f2f5fa;
-      color: #1c2b4a;
+      background: var(--loading);
+      color: var(--loading-text);
       font-size: 16px;
     }
 
     #loading[hidden] { display: none; }
-    #loading.error #loading-status { color: #a51d2d; }
+    #loading.error #loading-status { color: var(--danger); }
     #loading.error joomla-core-loader { display: none; }
   </style>
 </head>
