@@ -39,7 +39,7 @@ async function renderVersions() {
         index ? ' · ' : '',
         element('a', { href: playgroundLink({ joomla: bundle.branch ?? bundle.joomla.split('.').slice(0, 2).join('.') }) },
           bundle.branch ? `Joomla ${bundle.branch}` : `Joomla ${bundle.joomla}`),
-        bundle.branch ? ' (the development branch, a nightly build)' : '',
+        bundle.branch ? ` (a nightly build${bundle === others.find((candidate) => candidate.branch) ? ', the development branch' : ''})` : '',
       ])
     );
     document.querySelector('#home-other-versions').hidden = !others.length;

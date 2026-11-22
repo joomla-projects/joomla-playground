@@ -26,7 +26,8 @@ sent to a server.
   without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
   takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
   changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
-  version of the pull request's branch (6.3-dev, 6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
+  nightly build of the pull request's branch (6.3-dev, 6.2-dev or 5.4-dev): the branch as it is now, not its last
+  release. It says when it does not have that branch. Changes to JavaScript or
   CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
 - **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
   English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
@@ -77,10 +78,11 @@ The toolbar above the site:
 | **Import…** | Start a playground from such a zip, e.g. one someone sent you. |
 
 On the right:
-- **Joomla** switches the Joomla version (6.3-dev, 6.2 or 5.4): a new temporary playground starts with it.
-  6.3-dev is the development branch: the nightly build of the next minor version, which most pull requests are
-  for. The playground takes a new nightly build on days the branch has changed, and moves on after each minor
-  release (6.4-dev after 6.3.0). A saved site keeps the version it was made with.
+- **Joomla** switches the Joomla version (6.3-dev, 6.2-dev, 6.2, 5.4-dev or 5.4): a new temporary playground starts
+  with it. The `-dev` versions are nightly builds of Joomla's branches. 6.3-dev is the development branch: the next
+  minor version, which most pull requests are for. 6.2-dev and 5.4-dev are the branches of the releases, with the
+  fixes for their next patch release. The playground takes a new nightly build on days a branch has changed, and
+  moves on after each release (6.4-dev after 6.3.0). A saved site keeps the version it was made with.
 - **PHP** switches the PHP version (8.3, 8.4 or 8.5): a saved site reopens with it, a temporary playground starts
   again from the same link.
 - The Super User's name and password (see [Logging in](#logging-in)). Hover over the database driver for
@@ -112,7 +114,7 @@ A link can say how a new playground should look. Add these to the address:
 
 | Parameter | Example | What it does |
 |---|---|---|
-| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works. `?joomla=dev` (or `6.3-dev`) is the development branch |
+| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works. `?joomla=dev` (or `6.3-dev`) is the development branch; `6.2-dev` and `5.4-dev` are the nightly builds of the releases' branches |
 | `php` | `?php=8.3` | PHP version: 8.3, 8.4 (default) or 8.5 |
 | `url` | `?url=/index.php` | The page to open first; default `/administrator/` |
 | `login` | `?login=no` | Start logged out |

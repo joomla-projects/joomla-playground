@@ -59,6 +59,10 @@ Then open http://localhost:5400/.
   (`bin/build-browser-bundles.php`). It downloads Full Packages missing from `.cache/`, installs each, and packs
   it for the browser in `web/public/joomla/<version>/`. `web/public/joomla/versions.json` lists them.
   `--version=<version>` rebuilds one.
+- It also builds the nightly builds of Joomla's development branches (developer.joomla.org/nightly-builds.html):
+  the next minor version after the default (6.3-dev), and the branch of each version in the list (6.2-dev,
+  5.4-dev) when its nightly build is newer than the release. `--version=development` rebuilds those,
+  `--no-development` skips them.
 - It also downloads the accredited language packs of each version into `joomla/<version>/languages/`
   (`bin/download-language-packs.php`, cached in `.cache/language-packs/`; about 32 MB per version). The
   playground's system plugin points Joomla's download of such a pack to that copy. `--no-languages` skips
