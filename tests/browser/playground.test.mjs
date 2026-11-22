@@ -264,6 +264,25 @@ describe('Joomla Playground in the browser', () => {
     assert.ok(await siteShows(page, playground, 'Written after saving'), 'The change after saving survived the reload');
   });
 
+  test('the site API changes files of a saved site, and the change stays after a reload', async () => {
+    const site = (operation, args) =>
+      page.evaluate(([operation, args]) => window.joomlaPlaygroundSite(operation, args).catch((error) => ({ code: error.code })), [operation, args]);
+
+    const written = await site('write', { path: 'playground-api.php', text: '<?php echo "From the site API";', revision: null });
+
+    assert.equal(written.created, true);
+    assert.equal((await site('write', { path: 'playground-api.php', text: 'x', revision: null })).code, 'EXISTS');
+    assert.equal((await site('request', { path: '/playground-api.php' })).text, 'From the site API');
+    assert.equal((await site('runPhp', { code: 'echo PHP_INT_SIZE;' })).output, '8');
+    assert.match((await site('cli', { args: ['extension:list', '--type=template'] })).output, /cassiopeia/i);
+
+    await page.reload();
+    playground = await waitForPlayground(page);
+
+    assert.equal((await site('read', { path: 'playground-api.php' })).revision, written.revision);
+    await site('delete', { path: 'playground-api.php' });
+  });
+
   test('lists the saved site under My sites, and renames it', async () => {
     await page.click('#sites-menu summary');
     await page.waitForSelector('#sites-list a:has-text("Persistence test")', { timeout: 10000 });
