@@ -906,7 +906,7 @@ see §26.)
 3. `addModule` Language Switcher (flags, position `topbar`).
 4. `installExtension` the module, and `addModule` it on the Home Dashboard (position `cpanel`).
 5. `installExtension` the plugin; `enableExtension` with its options: dataset `heritage`, the five languages.
-6. (Removed: `addUserGroup` "Magazine Reviewers"; now a patch of the dataset, see below.)
+6. (Removed: `addUserGroup` "Magazine Reviewers". The dataset has the group itself since 2026-11-02, see below.)
 7. `importSampleData` with `group: "demodata"`: the 16 steps the module's Install button runs.
 8. (Removed, see §26: `addArticle` "About this multilingual demo".)
 
@@ -928,7 +928,7 @@ are reported to the author, with a fix for each: issues ceford/cefjdemos-plg-dem
 
 | Problem | Effect | In the playground |
 |---|---|---|
-| The heritage users include one in the group "Magazine Reviewers", which the dataset does not create | Step 3 (users) fails: "cannot save account without groups" | Patched: the group added to the dataset's `usergroups.json` (before, the blueprint added it; that would clash with the fix upstream) |
+| The heritage users include one in the group "Magazine Reviewers", which the dataset does not create | Step 3 (users) fails: "cannot save account without groups" | Fixed upstream (ceford/cefjdemos-plg-demodata#11, group "Magazine Reviewer"); the playground's patch of `usergroups.json` is removed |
 | `createModel('NewsFeed', …)`: the class is `NewsfeedModel` | On a case-sensitive file system (Linux) no model is found: step 11 (newsfeeds) fails | Patched |
 | The completion step sends a private message from user "superman" to "playwright"; the heritage dataset has neither | Invalid SQL (`user_id_from = ,`): step 16 fails | Patched: skipped without those users |
 | It stores a privacy consent for user "johndoe", who is not in the heritage dataset | `''` as a user id: rejected by MySQL's strict mode and by SQLite | Patched: skipped without that user |
