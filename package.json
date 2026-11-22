@@ -13,6 +13,7 @@
     "web:build": "vite build --config web/vite.config.js",
     "web:preview": "vite preview --config web/vite.config.js --port 5401",
     "test:browser": "node --test --test-timeout=600000 tests/browser/playground.test.mjs",
+    "test:site-api": "node --test --test-timeout=300000 tests/site-api/site-api.test.mjs",
     "test:proxy": "node --test tests/proxy/cors-proxy.test.mjs",
     "proxy:dev": "node proxy/dev-server.mjs",
     "test:scripts": "node --test tests/scripts/update-joomla-versions.test.mjs",
@@ -20,11 +21,11 @@
     "demos": "node scripts/build-demos.mjs"
   },
   "devDependencies": {
-    "@php-wasm/fs-journal": "3.1.62",
-    "@php-wasm/node": "3.1.62",
-    "@php-wasm/util": "3.1.62",
-    "@php-wasm/universal": "3.1.62",
-    "@php-wasm/web": "3.1.62",
+    "@php-wasm/fs-journal": "3.1.63",
+    "@php-wasm/node": "3.1.63",
+    "@php-wasm/util": "3.1.63",
+    "@php-wasm/universal": "3.1.63",
+    "@php-wasm/web": "3.1.63",
     "marked": "18.1.1",
     "playwright-core": "1.64.1",
     "vite": "6.4.5"

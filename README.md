@@ -3,7 +3,12 @@
 A complete Joomla site in your browser tab: no server, no installation, no account. Try a Joomla version, test
 an idea, show something to someone, and throw it away, or keep it in your browser for later.
 
-**Open it:** <https://joomla-projects.github.io/joomla-playground/>
+**Start here:** <https://joomla-projects.github.io/joomla-playground/>. That address shows the overview (at
+`/overview/`): the demos, the guided tours, testing a pull request and the other possibilities. The title in the
+playground's toolbar links to it.
+
+**Open an empty playground:** <https://joomla-projects.github.io/joomla-playground/?new>. Every address with
+parameters starts a playground (see [Setting up a playground with a link](#setting-up-a-playground-with-a-link)).
 
 After a few seconds you see Joomla's administrator, already logged in as a Super User. Everything runs in your
 browser: PHP is compiled to WebAssembly, and the site and its database live in the tab's memory. Nothing is
@@ -11,24 +16,27 @@ sent to a server.
 
 ## Demos
 
+- **Patch Tester:** <https://joomla-projects.github.io/joomla-playground/?blueprint=patchtester>. Joomla with the
+  [Patch Tester](https://github.com/joomla-extensions/patchtester) installed. Click **Fetch Data** to get the open
+  pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token, GitHub allows 60
+  requests an hour; one Fetch Data uses about four. Click **GitHub token…** in the toolbar and enter one: the
+  browser remembers it and gives it to the Patch Tester of every new playground. Use a fine-grained token with
+  access to public repositories only (read-only) and no permissions, because the pages of the playground can read
+  it, including the pull requests you test. Never put a token in a blueprint: anyone with the link can read it.
+- **Test a pull request of Joomla:** <https://joomla-projects.github.io/joomla-playground/?pr=48831>. Joomla with
+  the Patch Tester, and in the toolbar a link to pull request 48831 and an **Apply patch** button. The site opens
+  without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
+  takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
+  changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
+  nightly build of the pull request's branch (6.3-dev, 6.2-dev or 5.4-dev): the branch as it is now, not its last
+  release. It says when it does not have that branch. Changes to JavaScript or
+  CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
 - **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
   English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
   [demonstration data](https://github.com/ceford/cefjdemos-plg-demodata) of Clifford E Ford. It starts in a few
   seconds, from a prebuilt copy of
   the site. Add `&fresh=1` to watch the blueprint build it in your browser instead: that takes about 45 seconds,
   plus a minute for the Smart Search index while you can already look around.
-- **Patch Tester:** <https://joomla-projects.github.io/joomla-playground/?blueprint=patchtester>. Joomla with the
-  [Patch Tester](https://github.com/joomla-extensions/patchtester) installed. Click **Fetch Data** to get the open
-  pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token in the Patch
-  Tester's Options, GitHub allows 60 requests an hour; one Fetch Data uses about four. Never put a token in a
-  blueprint: anyone with the link can read it.
-- **Test a pull request of Joomla:** <https://joomla-projects.github.io/joomla-playground/?pr=48831>. Joomla with
-  the Patch Tester, and in the toolbar a link to pull request 48831 and an **Apply patch** button. The site opens
-  without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
-  takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
-  changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
-  version of the pull request's branch (6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
-  CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
 - **Weblinks:** <https://joomla-projects.github.io/joomla-playground/?blueprint=weblinks>. Joomla with
   [Weblinks](https://github.com/joomla-extensions/weblinks) installed, the component for a directory of links that
   used to be part of Joomla. It opens on its list in the administrator.
@@ -70,10 +78,14 @@ The toolbar above the site:
 | **Mail** | The mails the site sent. They are caught here, not delivered: try a password reset or a contact form. |
 | **Export** | Download the whole site as a zip. |
 | **Import…** | Start a playground from such a zip, e.g. one someone sent you. |
+| **GitHub token…** | With the Patch Tester: the GitHub token the browser remembers for it (see the Patch Tester above). |
 
 On the right:
-- **Joomla** switches the Joomla version (6.2 or 5.4): a new temporary playground starts with it. A saved site
-  keeps the version it was made with.
+- **Joomla** switches the Joomla version (6.3-dev, 6.2-dev, 6.2, 5.4-dev or 5.4): a new temporary playground starts
+  with it. The `-dev` versions are nightly builds of Joomla's branches. 6.3-dev is the development branch: the next
+  minor version, which most pull requests are for. 6.2-dev and 5.4-dev are the branches of the releases, with the
+  fixes for their next patch release. The playground takes a new nightly build on days a branch has changed, and
+  moves on after each release (6.4-dev after 6.3.0). A saved site keeps the version it was made with.
 - **PHP** switches the PHP version (8.3, 8.4 or 8.5): a saved site reopens with it, a temporary playground starts
   again from the same link.
 - The Super User's name and password (see [Logging in](#logging-in)). Hover over the database driver for
@@ -105,7 +117,7 @@ A link can say how a new playground should look. Add these to the address:
 
 | Parameter | Example | What it does |
 |---|---|---|
-| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works |
+| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works. `?joomla=dev` (or `6.3-dev`) is the development branch; `6.2-dev` and `5.4-dev` are the nightly builds of the releases' branches |
 | `php` | `?php=8.3` | PHP version: 8.3, 8.4 (default) or 8.5 |
 | `url` | `?url=/index.php` | The page to open first; default `/administrator/` |
 | `login` | `?login=no` | Start logged out |

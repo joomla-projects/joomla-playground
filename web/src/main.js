@@ -2,11 +2,13 @@
 // iframe and offers saving, exporting and importing playgrounds.
 //
 // ?site=<slug> opens a site saved in this browser; without it, a new temporary playground starts, set up by the
-// blueprint in the URL if there is one (see blueprint.js).
+// blueprint in the URL if there is one (see blueprint.js). ?new starts an empty one: the address without parameters
+// is the overview (index.html sends it on to overview/).
 
 import { deleteSite, freeSlug, isSiteOpen, listSites, readMeta, renameSite } from './storage.js';
 import { PHP_VERSIONS, blueprintFromUrl } from './blueprint.js';
 import { parseMail } from './mail.js';
+import { forgetToken, gitHubHeaders, rememberToken, rememberedToken } from './github-token.js';
 
 const base = new URL('./', location.href);
 
@@ -42,6 +44,13 @@ const elements = {
   pullRequest: document.querySelector('#pull-request'),
   pullRequestLink: document.querySelector('#pull-request-link'),
   pullRequestToggle: document.querySelector('#pull-request-toggle'),
+  gitHubToken: document.querySelector('#github-token'),
+  tokenDialog: document.querySelector('#token-dialog'),
+  tokenForm: document.querySelector('#token-form'),
+  tokenInput: document.querySelector('#token-input'),
+  tokenState: document.querySelector('#token-state'),
+  tokenError: document.querySelector('#token-error'),
+  tokenForget: document.querySelector('#token-forget'),
 };
 
 let worker = null;
@@ -91,7 +100,7 @@ function setLoading(loading) {
 import(/* @vite-ignore */ new URL('joomla/joomla-core-loader.js', base).href).catch(() => {});
 
 function setBusy(busy) {
-  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php]) {
+  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php, elements.gitHubToken]) {
     button.disabled = busy;
   }
 
@@ -142,7 +151,7 @@ function startWorker() {
       const { resolve, reject } = pending.get(data.id);
 
       pending.delete(data.id);
-      data.error ? reject(new Error(data.error)) : resolve(data.value);
+      data.error ? reject(Object.assign(new Error(data.error), data.code ? { code: data.code } : {})) : resolve(data.value);
     }
   };
   worker.onerror = (event) => {
@@ -188,6 +197,8 @@ async function boot(options = {}, transfer = []) {
   const scope = `scope-${Math.random().toString(36).slice(2, 10)}-${joomla.replaceAll('.', '-')}`;
 
   playground = await call('boot', { base: base.href, scope, corsProxy, ...options, joomla }, transfer);
+  // Before the first page: the Patch Tester has the remembered token when that page asks GitHub.
+  await fillGitHubToken();
   show(playground.landingPage ?? '/administrator/');
 
   if (playground.blueprintError) {
@@ -204,7 +215,7 @@ function show(path = '/administrator/') {
   readyStatus = `Ready in ${seconds} s (${where})`;
   setStatus(backgroundStatus ? `${readyStatus} · ${backgroundStatus}` : readyStatus);
   elements.credentials.textContent = `${playground.username} / ${playground.password}`;
-  elements.info.textContent = `Joomla ${playground.manifest.joomla} · ${playground.manifest.driver}`;
+  elements.info.textContent = `Joomla ${playground.manifest.development ?? playground.manifest.joomla} · ${playground.manifest.driver}`;
   elements.php.value = playground.phpVersion;
   elements.joomla.value = playground.manifest.joomla;
   elements.info.title = Object.entries(playground.timings).map(([step, ms]) => `${step}: ${ms} ms`).join('\n');
@@ -219,6 +230,9 @@ function show(path = '/administrator/') {
   // For tests and debugging; the export for scripts/build-demos.mjs.
   window.joomlaPlayground = playground;
   window.joomlaPlaygroundExport = exportSite;
+  // The site API (web/src/site-api.js): window.joomlaPlaygroundSite('read', { path: 'index.php' }). A failed
+  // operation rejects with an Error that has a code, such as NOT_FOUND or CONFLICT.
+  window.joomlaPlaygroundSite = (operation, args = {}) => call('site', { operation, args });
 }
 
 async function saveSite() {
@@ -276,7 +290,7 @@ async function importSite(file) {
   const bytes = await file.arrayBuffer();
 
   // An imported site starts as a temporary playground; it can be saved from there.
-  history.replaceState(null, '', base.pathname);
+  history.replaceState(null, '', `${base.pathname}?new`);
 
   try {
     // An export says which Joomla version it holds: use the bundle of that version, if there is one.
@@ -414,19 +428,31 @@ function switchJoomla() {
   const version = elements.joomla.value;
   const url = new URL(location.href);
 
-  if (!confirm(`Start a new playground with Joomla ${version}? This one is not saved and will be lost.`)) {
+  const bundle = bundles.versions.find((candidate) => candidate.joomla === version);
+
+  if (!confirm(`Start a new playground with Joomla ${bundleLabel(bundle)}? This one is not saved and will be lost.`)) {
     elements.joomla.value = playground.manifest.joomla;
 
     return;
   }
 
-  url.searchParams.set('joomla', version);
+  // The development branch by its name: the link keeps working when the branch gets a new version number.
+  url.searchParams.set('joomla', bundle.branch ?? version);
   location.href = url.href;
 }
 
 /**
+ * How the toolbar names a bundle: its version, or the branch of a development bundle ("6.3-dev", "6.2-dev").
+ */
+function bundleLabel(bundle) {
+  return bundle.branch ?? bundle.joomla;
+}
+
+/**
  * The Joomla version to start: a saved site's own, the one a blueprint or ?joomla= asks for (a version or its
- * start, like "5" or "5.4"), or the default.
+ * start, like "5" or "5.4"; a branch like "6.2-dev" for its nightly build, "dev" for the development branch of the
+ * next minor version), or the default. A release goes before a development branch: "6" is the newest 6 release and
+ * "6.2" is 6.2.0, not the nightly build of 6.2-dev.
  */
 async function chooseJoomla(site, blueprint) {
   const available = bundles.versions.map((bundle) => bundle.joomla);
@@ -447,10 +473,18 @@ async function chooseJoomla(site, blueprint) {
     return { joomla: bundles.default };
   }
 
-  const joomla = available.find((version) => `${version}.`.startsWith(`${wanted}.`));
+  // The development branches come first in versions.json, the next minor version's first.
+  const developments = bundles.versions.filter((bundle) => bundle.branch);
+  const releases = bundles.versions.filter((bundle) => !bundle.branch).map((bundle) => bundle.joomla);
+  const branch = developments.find((bundle) => bundle.branch === String(wanted));
+  const version = String(wanted).replace(/-dev$/, '');
+  const joomla = ['dev', 'development'].includes(version)
+    ? developments[0]?.joomla
+    : (branch?.joomla ??
+      [...releases, ...developments.map((bundle) => bundle.joomla)].find((candidate) => `${candidate}.`.startsWith(`${version}.`)));
 
   if (!joomla) {
-    throw new Error(`Joomla ${wanted} is not available; choose ${available.join(', ')}`);
+    throw new Error(`Joomla ${wanted} is not available; choose ${bundles.versions.map(bundleLabel).join(', ')}`);
   }
 
   return { joomla };
@@ -543,7 +577,7 @@ async function pullRequestInfo(number) {
   }
 
   try {
-    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/pulls/${number}`, { headers: { Accept: 'application/vnd.github+json' } });
+    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/pulls/${number}`, { headers: gitHubHeaders() });
 
     if (!response.ok) {
       return null;
@@ -565,8 +599,9 @@ async function pullRequestInfo(number) {
 }
 
 /**
- * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.2-dev"): that version, or the
- * newest of the same major version, with a note when it is not the version the pull request is for.
+ * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.3-dev"): the nightly build of that
+ * branch, or else a release of its minor version, or else the newest version before it (for 7.0-dev the development
+ * branch 6.3-dev), with a note when it is not the version the pull request is for.
  *
  * @returns {{joomla: string, note: string|null}|null}
  */
@@ -577,23 +612,30 @@ function joomlaForBranch(branch) {
     return null;
   }
 
-  const available = bundles.versions.map((bundle) => bundle.joomla);
-  const exact = available.find((version) => version.startsWith(`${match[1]}.${match[2]}.`));
+  const nightly = bundles.versions.find((bundle) => bundle.branch === `${match[1]}.${match[2]}-dev`);
+  const exact = nightly?.joomla ?? bundles.versions.map((bundle) => bundle.joomla).find((version) => version.startsWith(`${match[1]}.${match[2]}.`));
 
   if (exact) {
     return { joomla: exact, note: null };
   }
 
-  const newest = (version) => version.split('.').map(Number);
-  const sameMajor = available.filter((version) => version.startsWith(`${match[1]}.`)).sort((a, b) => {
-    const [x, y] = [newest(a), newest(b)];
+  const numbers = (version) => version.split('.').map(Number);
+  const newestFirst = [...bundles.versions].sort((a, b) => {
+    const [x, y] = [numbers(a.joomla), numbers(b.joomla)];
 
     return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
-  })[0];
+  });
+  const wanted = [Number(match[1]), Number(match[2])];
+  const before = newestFirst.find((bundle) => {
+    const [major, minor] = numbers(bundle.joomla);
+
+    return major < wanted[0] || (major === wanted[0] && minor < wanted[1]);
+  });
+  const bundle = before ?? newestFirst.at(-1);
 
   return {
-    joomla: sameMajor ?? bundles.default,
-    note: `The pull request is for ${branch}; this playground has Joomla ${sameMajor ?? bundles.default}, so the patch may not apply`,
+    joomla: bundle.joomla,
+    note: `The pull request is for ${branch}; this playground has Joomla ${bundleLabel(bundle)}, so the patch may not apply`,
   };
 }
 
@@ -686,6 +728,80 @@ async function togglePullRequest() {
   }
 }
 
+/**
+ * Gives the Patch Tester of a new playground the GitHub token this browser remembers (github-token.js), if it has
+ * none yet; a token entered in the site itself stays. The toolbar shows the GitHub token button where the Patch Tester
+ * is installed.
+ */
+async function fillGitHubToken() {
+  const token = rememberedToken();
+
+  try {
+    playground.patchTester = await call('patchTester', { set: token });
+  } catch (error) {
+    console.error('The Patch Tester did not get the GitHub token:', error);
+    playground.patchTester = null;
+  }
+
+  renderGitHubToken();
+}
+
+function renderGitHubToken() {
+  const remembered = Boolean(rememberedToken());
+  const site = playground?.patchTester;
+
+  elements.gitHubToken.hidden = !site?.installed;
+  elements.gitHubToken.title = site?.hasToken
+    ? `The Patch Tester has a GitHub token${remembered ? ', remembered in this browser for every new playground' : ''}`
+    : 'Give the Patch Tester a GitHub token, remembered in this browser for every new playground';
+  elements.tokenState.textContent = [
+    remembered ? 'This browser remembers a token.' : 'This browser remembers no token.',
+    site?.hasToken ? 'The Patch Tester of this playground has one.' : 'The Patch Tester of this playground has none.',
+  ].join(' ');
+  elements.tokenForget.disabled = !remembered;
+}
+
+function openTokenDialog() {
+  elements.tokenInput.value = '';
+  elements.tokenError.textContent = '';
+  renderGitHubToken();
+  elements.tokenDialog.showModal();
+  elements.tokenInput.focus();
+}
+
+/** Remembers the token and gives it to this playground's Patch Tester, also over a token it had. */
+async function saveGitHubToken(event) {
+  event.preventDefault();
+
+  try {
+    const token = rememberToken(elements.tokenInput.value);
+
+    playground.patchTester = await call('patchTester', { set: token, overwrite: true });
+    elements.tokenDialog.close();
+    setStatus(`${readyStatus} · GitHub token remembered and given to the Patch Tester`);
+  } catch (error) {
+    elements.tokenError.textContent = error.message;
+  }
+
+  renderGitHubToken();
+}
+
+/** Forgets the token, and takes it from this playground's Patch Tester again (if it still has that one). */
+async function forgetGitHubToken() {
+  const token = rememberedToken();
+
+  forgetToken();
+
+  try {
+    playground.patchTester = await call('patchTester', { clear: token });
+    setStatus(`${readyStatus} · GitHub token forgotten`);
+  } catch (error) {
+    elements.tokenError.textContent = error.message;
+  }
+
+  renderGitHubToken();
+}
+
 function startOver() {
   if (confirm('Throw this playground away and start again from the same link?')) {
     location.reload();
@@ -711,12 +827,12 @@ async function start() {
   startWorker();
 
   bundles = await (await fetch(new URL('joomla/versions.json', base))).json();
-  elements.joomla.replaceChildren(...bundles.versions.map((bundle) => new Option(bundle.joomla, bundle.joomla)));
+  elements.joomla.replaceChildren(...bundles.versions.map((bundle) => new Option(bundleLabel(bundle), bundle.joomla)));
   elements.joomla.onchange = switchJoomla;
 
   elements.site.onclick = () => (elements.frame.src = `${playground.siteUrl}/`);
   elements.admin.onclick = () => (elements.frame.src = `${playground.siteUrl}/administrator/`);
-  elements.newSite.onclick = () => (location.href = base.pathname);
+  elements.newSite.onclick = () => (location.href = `${base.pathname}?new`);
   elements.reset.onclick = startOver;
   elements.php.replaceChildren(...PHP_VERSIONS.map((version) => new Option(version, version)));
   elements.php.onchange = switchPhp;
@@ -726,6 +842,9 @@ async function start() {
   elements.importFile.onchange = () => elements.importFile.files[0] && importSite(elements.importFile.files[0]);
   elements.sitesMenu.ontoggle = () => elements.sitesMenu.open && renderSites();
   elements.pullRequestToggle.onclick = togglePullRequest;
+  elements.gitHubToken.onclick = openTokenDialog;
+  elements.tokenForm.onsubmit = saveGitHubToken;
+  elements.tokenForget.onclick = forgetGitHubToken;
   elements.mail.onclick = () => {
     elements.mailDialog.showModal();
     renderMails();

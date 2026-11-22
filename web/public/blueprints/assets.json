@@ -1,6 +1,6 @@
 {
   "weblinks/pkg_weblinks.zip": {
-    "url": "https://github.com/joomla-extensions/weblinks/releases/download/5.2.0/pkg-weblinks-5.2.0.zip"
+    "url": "https://github.com/joomla-extensions/weblinks/releases/download/5.2.1/pkg-weblinks-5.2.1.zip"
   },
   "patchtester/com_patchtester.zip": {
     "url": "https://github.com/joomla-extensions/patchtester/releases/download/5.0.1/com_patchtester_5.0.1.zip"
@@ -11,44 +11,6 @@
   },
   "cefjdemos/plg_demodata_features101.zip": {
     "url": "https://github.com/ceford/cefjdemos-plg-demodata/archive/refs/heads/main.zip",
-    "folder": "features101",
-    "patches": [
-      {
-        "file": "src/Extension/Features101.php",
-        "replace": "createModel('NewsFeed', 'Administrator'",
-        "with": "createModel('Newsfeed', 'Administrator'",
-        "why": "the class is NewsfeedModel: on a case-sensitive file system 'NewsFeed' finds no model"
-      },
-      {
-        "file": "src/Extension/Features101.php",
-        "replace": "$playwright_id = $db->loadResult();\n",
-        "with": "$playwright_id = $db->loadResult();\n\n        // Not every dataset has these users.\n        if (!$superman_id || !$playwright_id) {\n            return;\n        }\n",
-        "why": "the heritage dataset has no users superman and playwright, so the private message query was invalid SQL"
-      },
-      {
-        "file": "src/Extension/Features101.php",
-        "replace": "        $johndoe_id = $db->loadResult();\n\n        $query = $db->createQuery();\n        if (empty($is_installed)) {\n            // Add a record\n            $pp",
-        "with": "        $johndoe_id = $db->loadResult();\n\n        // Not every dataset has this user.\n        if (!$johndoe_id) {\n            return;\n        }\n\n        $query = $db->createQuery();\n        if (empty($is_installed)) {\n            // Add a record\n            $pp",
-        "why": "the heritage dataset has no user johndoe, so the privacy consent stored '' as a user id"
-      },
-      {
-        "file": "src/Extension/Features101.php",
-        "replace": "        $oddjob_id = $db->loadResult();\n",
-        "with": "        $oddjob_id = $db->loadResult();\n\n        // Not every dataset has this group.\n        if (!$oddjob_id) {\n            return;\n        }\n",
-        "why": "the heritage dataset has no group Oddjob: the Special view level got the rules [6,3,8,], invalid JSON, and the administrator menu disappeared"
-      },
-      {
-        "file": "src/Extension/Features101.php",
-        "replace": "                    ->where($db->quoteName('id') . '=' . $ids['en-GB']);\n",
-        "with": "                    ->where($db->quoteName('id') . '=' . $ids['en-GB'])\n                    ->where($db->quoteName('context') . '=' . $db->quote($association['context']));\n",
-        "why": "the lookup of an existing association group ignored the context: the categories with the ids 15 to 20 took over and deleted the groups of the articles with the same ids, so the language switcher went to the home page on six articles"
-      },
-      {
-        "file": "datasets/heritage/en-gb/elements/usergroups.json",
-        "replace": "    \"parent\":\"Committee\"\n}]",
-        "with": "    \"parent\":\"Committee\"\n},\n{\n    \"title\":\"Magazine Reviewers\",\n    \"parent\":\"Registered\"\n}]",
-        "why": "user maggie is in the group Magazine Reviewers, which the heritage dataset did not create, so step 3 (users) failed"
-      }
-    ]
+    "folder": "features101"
   }
 }

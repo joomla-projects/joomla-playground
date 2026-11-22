@@ -24,6 +24,13 @@ export default defineConfig({
     target: 'es2022',
     outDir: 'dist',
     emptyOutDir: true,
+    // The playground (index.html), and the overview of what it offers (overview/index.html, at .../overview/).
+    rollupOptions: {
+      input: {
+        playground: fileURLToPath(new URL('./index.html', import.meta.url)),
+        overview: fileURLToPath(new URL('./overview/index.html', import.meta.url)),
+      },
+    },
   },
   server: {
     port: 5400,
