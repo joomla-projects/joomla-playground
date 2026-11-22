@@ -758,7 +758,7 @@ describe('Blueprints', () => {
 
       const demos = await tab.locator('.card a.open').evaluateAll((links) => links.map((link) => new URL(link.href).search));
 
-      assert.deepEqual(demos, ['?blueprint=heritage-demo', '?blueprint=patchtester', '?blueprint=weblinks']);
+      assert.deepEqual(demos, ['?blueprint=patchtester', '?blueprint=heritage-demo', '?blueprint=weblinks']);
 
       // The tours, from their list: one link per tutorial, to a blueprint the playground serves.
       await tab.waitForSelector('#home-tours-list a', { timeout: 30000 });
