@@ -28,6 +28,8 @@
  *                  ("branch": "6.3-dev") and the nightly's version ("development": "6.3.0-alpha1-dev").
  *   versions.json  { "default": "6.2.0", "versions": [ <manifest of each bundle: the development branches first,
  *                  newest first, then the releases>, ... ] }
+ *   joomla-core-loader.js, joomla-favicon.svg
+ *                  Joomla's loader web component and favicon, from the default bundle
  *
  * A Full Package that is not in .cache/ yet is downloaded from the joomla/joomla-cms releases on GitHub; a nightly
  * build again when the one in .cache/ is older than 12 hours. At the end, the files of the playground's own
@@ -126,9 +128,11 @@ foreach ($all as $version) {
 
 file_put_contents($out . '/versions.json', json_encode(['default' => $list['default'], 'versions' => $manifests], JSON_PRETTY_PRINT) . "\n");
 
-// Joomla's loader, which the page shows while a playground starts (before it knows which bundle it will use).
+// Joomla's loader and favicon, which the page shows while a playground starts (before it knows which bundle it will use).
 copy($out . '/' . $list['default'] . '/media/system/js/joomla-core-loader.min.js', $out . '/joomla-core-loader.js')
     || fail('No joomla-core-loader.min.js in the bundle of Joomla ' . $list['default']);
+copy($out . '/' . $list['default'] . '/media/system/images/joomla-favicon.svg', $out . '/joomla-favicon.svg')
+    || fail('No joomla-favicon.svg in the bundle of Joomla ' . $list['default']);
 
 echo "== Files of the playground's blueprints\n";
 $process = proc_open([PHP_BINARY, __DIR__ . '/download-blueprint-assets.php'], [1 => STDOUT, 2 => STDERR], $pipes);
