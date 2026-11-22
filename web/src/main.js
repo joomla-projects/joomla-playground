@@ -83,6 +83,8 @@ function setStatus(message, isError = false) {
   elements.status.textContent = message;
   elements.status.title = message;
   elements.status.classList.toggle('error', isError);
+  elements.status.setAttribute('role', isError ? 'alert' : 'status');
+  elements.status.setAttribute('aria-live', isError ? 'assertive' : 'polite');
 
   // While the loader shows, it says the same.
   elements.loadingStatus.textContent = message;
@@ -329,6 +331,9 @@ async function renderSites() {
     const rename = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Rename' });
     const remove = Object.assign(document.createElement('button'), { type: 'button', className: 'delete', textContent: 'Delete' });
 
+    rename.setAttribute('aria-label', `Rename ${site.title}`);
+    remove.setAttribute('aria-label', `Delete ${site.title}`);
+
     rename.onclick = async () => {
       const title = prompt('New name for this site:', site.title)?.trim();
 
@@ -373,22 +378,29 @@ function renderMails() {
     elements.mailList.append(Object.assign(document.createElement('li'), { className: 'empty', textContent: 'No mail yet. Mails the site sends show up here.' }));
   }
 
+  const activeMail = selectedMail ?? mails[0];
+
   for (const mail of mails) {
     const item = document.createElement('li');
+    const button = Object.assign(document.createElement('button'), { type: 'button' });
 
-    item.classList.toggle('selected', mail === selectedMail);
-    item.append(
+    if (mail === activeMail) {
+      button.setAttribute('aria-current', 'true');
+    }
+
+    button.append(
       Object.assign(document.createElement('div'), { className: 'subject', textContent: mail.subject }),
       Object.assign(document.createElement('div'), { className: 'meta', textContent: `To ${mail.to} · ${new Date(mail.received).toLocaleTimeString()}` })
     );
-    item.onclick = () => {
+    button.onclick = () => {
       selectedMail = mail;
       renderMails();
     };
+    item.append(button);
     elements.mailList.append(item);
   }
 
-  const mail = selectedMail ?? mails[0];
+  const mail = activeMail;
   const headers = mail ? [['From', mail.from], ['To', mail.to], ['Subject', mail.subject], ['Date', mail.date]] : [];
 
   elements.mailHeaders.replaceChildren(
@@ -763,6 +775,7 @@ function renderGitHubToken() {
 
 function openTokenDialog() {
   elements.tokenInput.value = '';
+  elements.tokenInput.removeAttribute('aria-invalid');
   elements.tokenError.textContent = '';
   renderGitHubToken();
   elements.tokenDialog.showModal();
@@ -777,9 +790,11 @@ async function saveGitHubToken(event) {
     const token = rememberToken(elements.tokenInput.value);
 
     playground.patchTester = await call('patchTester', { set: token, overwrite: true });
+    elements.tokenInput.removeAttribute('aria-invalid');
     elements.tokenDialog.close();
     setStatus(`${readyStatus} · GitHub token remembered and given to the Patch Tester`);
   } catch (error) {
+    elements.tokenInput.setAttribute('aria-invalid', 'true');
     elements.tokenError.textContent = error.message;
   }
 
@@ -844,11 +859,34 @@ async function start() {
   elements.pullRequestToggle.onclick = togglePullRequest;
   elements.gitHubToken.onclick = openTokenDialog;
   elements.tokenForm.onsubmit = saveGitHubToken;
+  elements.tokenInput.oninput = () => {
+    elements.tokenInput.removeAttribute('aria-invalid');
+    elements.tokenError.textContent = '';
+  };
   elements.tokenForget.onclick = forgetGitHubToken;
   elements.mail.onclick = () => {
     elements.mailDialog.showModal();
     renderMails();
   };
+
+  // Fallback for browsers without closedby="any" support (e.g. Safari).
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    for (const dialog of [elements.mailDialog, elements.tokenDialog]) {
+      dialog.addEventListener('click', (event) => {
+        if (event.target !== dialog) {
+          return;
+        }
+
+        const rect = dialog.getBoundingClientRect();
+        const isDialogContent = rect.top <= event.clientY && event.clientY <= rect.top + rect.height
+          && rect.left <= event.clientX && event.clientX <= rect.left + rect.width;
+
+        if (!isDialogContent) {
+          dialog.close();
+        }
+      });
+    }
+  }
 
   // A saved site writes its changes shortly after requests; when the tab is hidden or closed, write them now.
   const flush = () => playground?.site && call('flush').catch(() => {});
