@@ -177,7 +177,7 @@ function show(path = '/administrator/') {
   readyStatus = `Ready in ${seconds} s (${where})`;
   setStatus(backgroundStatus ? `${readyStatus} · ${backgroundStatus}` : readyStatus);
   elements.credentials.textContent = `${playground.username} / ${playground.password}`;
-  elements.info.textContent = `Joomla ${playground.manifest.joomla} · ${playground.manifest.driver}`;
+  elements.info.textContent = `Joomla ${playground.manifest.development ?? playground.manifest.joomla} · ${playground.manifest.driver}`;
   elements.php.value = playground.phpVersion;
   elements.joomla.value = playground.manifest.joomla;
   elements.info.title = Object.entries(playground.timings).map(([step, ms]) => `${step}: ${ms} ms`).join('\n');
@@ -387,19 +387,30 @@ function switchJoomla() {
   const version = elements.joomla.value;
   const url = new URL(location.href);
 
-  if (!confirm(`Start a new playground with Joomla ${version}? This one is not saved and will be lost.`)) {
+  const bundle = bundles.versions.find((candidate) => candidate.joomla === version);
+
+  if (!confirm(`Start a new playground with Joomla ${bundleLabel(bundle)}? This one is not saved and will be lost.`)) {
     elements.joomla.value = playground.manifest.joomla;
 
     return;
   }
 
-  url.searchParams.set('joomla', version);
+  // The development branch by its name: the link keeps working when the branch gets a new version number.
+  url.searchParams.set('joomla', bundle.branch ?? version);
   location.href = url.href;
 }
 
 /**
+ * How the toolbar names a bundle: its version, or the branch of the development bundle ("6.3-dev").
+ */
+function bundleLabel(bundle) {
+  return bundle.branch ?? bundle.joomla;
+}
+
+/**
  * The Joomla version to start: a saved site's own, the one a blueprint or ?joomla= asks for (a version or its
- * start, like "5" or "5.4"), or the default.
+ * start, like "5" or "5.4"; "6.3-dev" or "dev" for the development branch), or the default. A release goes before
+ * the development branch: "6" is the newest 6 release.
  */
 async function chooseJoomla(site, blueprint) {
   const available = bundles.versions.map((bundle) => bundle.joomla);
@@ -420,10 +431,15 @@ async function chooseJoomla(site, blueprint) {
     return { joomla: bundles.default };
   }
 
-  const joomla = available.find((version) => `${version}.`.startsWith(`${wanted}.`));
+  const development = bundles.versions.find((bundle) => bundle.branch);
+  const releases = bundles.versions.filter((bundle) => !bundle.branch).map((bundle) => bundle.joomla);
+  const version = String(wanted).replace(/-dev$/, '');
+  const joomla = ['dev', 'development'].includes(version)
+    ? development?.joomla
+    : [...releases, ...(development ? [development.joomla] : [])].find((candidate) => `${candidate}.`.startsWith(`${version}.`));
 
   if (!joomla) {
-    throw new Error(`Joomla ${wanted} is not available; choose ${available.join(', ')}`);
+    throw new Error(`Joomla ${wanted} is not available; choose ${bundles.versions.map(bundleLabel).join(', ')}`);
   }
 
   return { joomla };
@@ -538,8 +554,9 @@ async function pullRequestInfo(number) {
 }
 
 /**
- * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.2-dev"): that version, or the
- * newest of the same major version, with a note when it is not the version the pull request is for.
+ * The Joomla version of this playground for a pull request's branch ("5.4-dev", "6.3-dev"): that version, or else the
+ * newest one before it (for 7.0-dev the development branch 6.3-dev), with a note when it is not the version the pull
+ * request is for.
  *
  * @returns {{joomla: string, note: string|null}|null}
  */
@@ -557,16 +574,23 @@ function joomlaForBranch(branch) {
     return { joomla: exact, note: null };
   }
 
-  const newest = (version) => version.split('.').map(Number);
-  const sameMajor = available.filter((version) => version.startsWith(`${match[1]}.`)).sort((a, b) => {
-    const [x, y] = [newest(a), newest(b)];
+  const numbers = (version) => version.split('.').map(Number);
+  const newestFirst = [...bundles.versions].sort((a, b) => {
+    const [x, y] = [numbers(a.joomla), numbers(b.joomla)];
 
     return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
-  })[0];
+  });
+  const wanted = [Number(match[1]), Number(match[2])];
+  const before = newestFirst.find((bundle) => {
+    const [major, minor] = numbers(bundle.joomla);
+
+    return major < wanted[0] || (major === wanted[0] && minor < wanted[1]);
+  });
+  const bundle = before ?? newestFirst.at(-1);
 
   return {
-    joomla: sameMajor ?? bundles.default,
-    note: `The pull request is for ${branch}; this playground has Joomla ${sameMajor ?? bundles.default}, so the patch may not apply`,
+    joomla: bundle.joomla,
+    note: `The pull request is for ${branch}; this playground has Joomla ${bundleLabel(bundle)}, so the patch may not apply`,
   };
 }
 
@@ -665,7 +689,7 @@ async function start() {
   serviceWorkerReady = navigator.serviceWorker.register(new URL('sw.js', base), { scope: base.pathname }).then(newestServiceWorker);
 
   bundles = await (await fetch(new URL('joomla/versions.json', base))).json();
-  elements.joomla.replaceChildren(...bundles.versions.map((bundle) => new Option(bundle.joomla, bundle.joomla)));
+  elements.joomla.replaceChildren(...bundles.versions.map((bundle) => new Option(bundleLabel(bundle), bundle.joomla)));
   elements.joomla.onchange = switchJoomla;
 
   elements.site.onclick = () => (elements.frame.src = `${playground.siteUrl}/`);

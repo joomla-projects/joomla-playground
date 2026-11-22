@@ -27,7 +27,7 @@ sent to a server.
   without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
   takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
   changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
-  version of the pull request's branch (6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
+  version of the pull request's branch (6.3-dev, 6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
   CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
 - **Weblinks:** <https://joomla-projects.github.io/joomla-playground/?blueprint=weblinks>. Joomla with
   [Weblinks](https://github.com/joomla-extensions/weblinks) installed, the component for a directory of links that
@@ -72,8 +72,10 @@ The toolbar above the site:
 | **Import…** | Start a playground from such a zip, e.g. one someone sent you. |
 
 On the right:
-- **Joomla** switches the Joomla version (6.2 or 5.4): a new temporary playground starts with it. A saved site
-  keeps the version it was made with.
+- **Joomla** switches the Joomla version (6.3-dev, 6.2 or 5.4): a new temporary playground starts with it.
+  6.3-dev is the development branch: the nightly build of the next minor version, which most pull requests are
+  for. The playground takes a new nightly build on days the branch has changed, and moves on after each minor
+  release (6.4-dev after 6.3.0). A saved site keeps the version it was made with.
 - **PHP** switches the PHP version (8.3, 8.4 or 8.5): a saved site reopens with it, a temporary playground starts
   again from the same link.
 - The Super User's name and password (see [Logging in](#logging-in)). Hover over the database driver for
@@ -105,7 +107,7 @@ A link can say how a new playground should look. Add these to the address:
 
 | Parameter | Example | What it does |
 |---|---|---|
-| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works |
+| `joomla` | `?joomla=5.4` | Joomla version: 6.2 (default) or 5.4; `5` also works. `?joomla=dev` (or `6.3-dev`) is the development branch |
 | `php` | `?php=8.3` | PHP version: 8.3, 8.4 (default) or 8.5 |
 | `url` | `?url=/index.php` | The page to open first; default `/administrator/` |
 | `login` | `?login=no` | Start logged out |
