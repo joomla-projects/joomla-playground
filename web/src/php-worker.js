@@ -18,6 +18,7 @@ import { createSpawnHandler } from '@php-wasm/util';
 import { hasBase, readBase, readMeta, readSnapshot, siteLockName, writeBase, writeMeta, writeSnapshot } from './storage.js';
 import { DEFAULT_PHP_VERSION } from './blueprint.js';
 import { BlueprintError, runSteps } from './blueprint-steps.js';
+import { createSiteApi } from './site-api.js';
 
 const DOCUMENT_ROOT = '/var/www/html';
 const CA_BUNDLE = '/internal/shared/ca-bundle.crt';
@@ -44,9 +45,10 @@ const channel = new BroadcastChannel('joomla-playground');
  * changes: paths below the document root that changed since the site was unpacked from its base, and the folders
  *          that were renamed (moved with all their files)
  * dirty:   whether files changed since the last snapshot
+ * api:     the site API (see site-api.js)
  *
  * @type {{php: PHP, phpVersion: string, handler: PHPRequestHandler, manifest: object, bundleUrl: string, password: string, site: string|null,
- *   base: {id: string|null, bytes: Uint8Array|null}, changes: {paths: Set<string>, trees: Set<string>}, dirty: boolean}}
+ *   base: {id: string|null, bytes: Uint8Array|null}, changes: {paths: Set<string>, trees: Set<string>}, dirty: boolean, api: ReturnType<typeof createSiteApi>}}
  */
 let state = null;
 
@@ -64,7 +66,7 @@ function serialized(task) {
   return run;
 }
 
-const actions = { boot, save, exportSite, flush, pullRequestTest, patchTester };
+const actions = { boot, save, exportSite, flush, site: siteApi, pullRequestTest, patchTester };
 
 self.onmessage = async ({ data }) => {
   const action = actions[data?.type];
@@ -77,7 +79,7 @@ self.onmessage = async ({ data }) => {
     const { value, transfer = [] } = await action(data);
     self.postMessage({ type: 'result', id: data.id, value }, transfer);
   } catch (error) {
-    self.postMessage({ type: 'result', id: data.id, error: String(error?.message ?? error) });
+    self.postMessage({ type: 'result', id: data.id, error: String(error?.message ?? error), code: error?.code ?? null });
   }
 };
 
@@ -242,6 +244,8 @@ async function boot({ base, scope, joomla, site = null, title = null, zip = null
     changes,
     dirty: false,
   };
+  // Requests of the site API go through the current handler: a blueprint with "login": false replaces it.
+  state.api = createSiteApi({ php, root: DOCUMENT_ROOT, siteUrl, request: (request) => state.handler.request(request) });
 
   if (meta) {
     state.site = site;
@@ -549,6 +553,23 @@ async function patchTester({ set = null, overwrite = false, clear = null } = {})
   }
 
   return { value: result };
+}
+
+/**
+ * An operation of the site API (see site-api.js): files, PHP code, requests and Joomla's console, for tools such
+ * as an editor or an MCP connection. It runs in the request queue, between the page's requests; a change is saved
+ * in a saved site's snapshot right after it.
+ */
+async function siteApi({ operation, args }) {
+  if (!state) {
+    throw new Error('The playground is not running');
+  }
+
+  try {
+    return { value: await serialized(() => state.api.call(operation, args)) };
+  } finally {
+    scheduleSnapshot({ now: true });
+  }
 }
 
 /**

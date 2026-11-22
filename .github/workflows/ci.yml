@@ -100,5 +100,8 @@ jobs:
           npm run bundle
           npm run web:build
 
+      - name: Site API tests (PHP in WebAssembly in Node, on the bundle)
+        run: npm run test:site-api
+
       - name: Browser tests
         run: npm run test:browser

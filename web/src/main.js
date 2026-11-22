@@ -144,7 +144,7 @@ function startWorker() {
       const { resolve, reject } = pending.get(data.id);
 
       pending.delete(data.id);
-      data.error ? reject(new Error(data.error)) : resolve(data.value);
+      data.error ? reject(Object.assign(new Error(data.error), data.code ? { code: data.code } : {})) : resolve(data.value);
     }
   };
   worker.onerror = (event) => {
@@ -203,6 +203,9 @@ function show(path = '/administrator/') {
   // For tests and debugging; the export for scripts/build-demos.mjs.
   window.joomlaPlayground = playground;
   window.joomlaPlaygroundExport = exportSite;
+  // The site API (web/src/site-api.js): window.joomlaPlaygroundSite('read', { path: 'index.php' }). A failed
+  // operation rejects with an Error that has a code, such as NOT_FOUND or CONFLICT.
+  window.joomlaPlaygroundSite = (operation, args = {}) => call('site', { operation, args });
 }
 
 async function saveSite() {
