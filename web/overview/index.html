@@ -133,6 +133,32 @@
 
     .card p { margin: 0; }
 
+    .fork {
+      padding: 20px;
+      border: 2px dashed var(--accent);
+      border-radius: 10px;
+    }
+
+    .fork-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 13px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
     .card .open {
       margin-top: auto;
       padding-top: 8px;
@@ -275,6 +301,7 @@
   <main class="wrap">
     <nav class="sections" aria-label="On this page">
       <a href="#demos">Demos</a>
+      <a href="#fork">On a fork</a>
       <a href="#pull-requests">Test a pull request</a>
       <a href="#tours">Guided tours</a>
       <a href="#using">Using the playground</a>
@@ -313,6 +340,72 @@
           <p>Joomla with <a href="https://github.com/joomla-extensions/weblinks">Weblinks</a>, the component for a
             directory of links that used to be part of Joomla. It opens on its list in the administrator.</p>
           <a class="open" href="../?blueprint=weblinks">Open Weblinks</a>
+        </article>
+      </div>
+    </section>
+
+    <section id="fork" class="fork" aria-labelledby="fork-title">
+      <h2 id="fork-title">On Herman Peeren's fork, for now <span class="fork-tag">fork</span></h2>
+      <p class="muted">These demos are not on this site (yet). They run on
+        <a href="https://hermanpeeren.github.io/joomla-playground-extensions/overview/">the playground of a fork</a>,
+        <a href="https://github.com/HermanPeeren/joomla-playground-extensions">HermanPeeren/joomla-playground-extensions</a>,
+        where extensions and features are tried out before they are offered here. The links open that site.</p>
+      <div class="cards">
+        <article class="card">
+          <h3>Joomla Component Builder <span class="fork-tag">fork</span></h3>
+          <p>Joomla 6.2 with <a href="https://github.com/joomengine/pkg-component-builder">Joomla Component
+            Builder</a> (JCB) and its plugins. It opens on JCB's dashboard: under <strong>Compiler</strong>, compile the
+            Demo J6 component, then install it on the same site or download its zip. Starts in a few seconds from a
+            prebuilt copy; add <code>&amp;fresh=1</code> to install JCB in your browser instead.</p>
+          <p>JCB's own maintainer, Llewellyn van der Merwe, has a playground for it too: the
+            <a href="https://playground.joomengine.org/">JoomEngine Playground</a>. JCB is its default, on Joomla 6 or 5.
+            What is different there: it runs a real MariaDB database compiled to WebAssembly instead of SQLite, on a
+            64-bit PHP, and it adds JoomEngine Code, a code editor in the browser (VS Code's editor, with AI-assisted
+            changes and PHP debugging), and Adminer for the database.</p>
+          <a class="open" href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=jcb">Open Joomla Component Builder</a>
+          <a href="https://playground.joomengine.org/">Open the JoomEngine Playground</a>
+        </article>
+        <article class="card">
+          <h3>Component tutorial <span class="fork-tag">fork</span></h3>
+          <p>A playground for each of the 18 steps of the Joomla Manual's
+            <a href="https://manual.joomla.org/docs/building-extensions/components/component-development-tutorial/">Component
+            Development Tutorial</a>, with the code of that step installed, from
+            <a href="https://github.com/joomla/manual-examples/tree/main/component-tutorial">joomla/manual-examples</a>.
+            Read a step in the manual, then try its code here. From step 4 on, the component's table has two
+            landmarks.</p>
+          <ul class="steps" aria-label="Steps">
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step01" title="Step 1: Basic Component">1</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step02" title="Step 2: Defining a Menuitem">2</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step03" title="Step 3: Adding the Model">3</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step04" title="Step 4: Using the Database">4</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step05" title="Step 5: Setting the Browser Title">5</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step06" title="Step 6: Administrator List">6</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step07" title="Step 7: Administrator Edit">7</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step08" title="Step 8: Using Higher-level MVC Classes">8</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step09" title="Step 9: Adding a Record">9</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step10" title="Step 10: Deleting Records">10</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step11" title="Step 11: Publishing">11</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step12" title="Step 12: Filtering, Pagination and Column Ordering">12</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step13" title="Step 13: Toolbars">13</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step14" title="Step 14: Image">14</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step15" title="Step 15: JavaScript Map">15</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step16" title="Step 16: Config and Install Script">16</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step17" title="Step 17: Validation">17</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step18" title="Step 18: Custom Server-side Validation">18</a></li>
+          </ul>
+          <a class="open" href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step01">Open step 1: Basic Component</a>
+        </article>
+        <article class="card">
+          <h3>An AI assistant in the playground (MCP) <span class="fork-tag">fork</span></h3>
+          <p>An AI assistant on your computer (Claude Code, Claude Desktop, Codex, Gemini CLI or another MCP client)
+            works on the site in your playground tab: it reads and writes the site's files, runs PHP and Joomla's
+            console, makes requests to the site, and shows you a page. Ask it, for example, to install an extension
+            and add some content, or to build a small module and show it.</p>
+          <p>It works through a small MCP server on your computer, which talks to the playground tab. So there is no
+            demo link: you add the server to your assistant once, the assistant gives you the link to open, and the
+            page asks you before it connects. The site stays in your browser, as always.</p>
+          <a class="open" href="https://github.com/HermanPeeren/joomla-playground-extensions#an-ai-assistant-in-the-playground-mcp">How to set it up</a>
+          <a href="https://github.com/HermanPeeren/joomla-playground-extensions/blob/main/docs/MCP.md">How it works</a>
         </article>
       </div>
     </section>
