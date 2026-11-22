@@ -724,6 +724,67 @@ describe('Blueprints', () => {
     }
   });
 
+  test('remembers a GitHub token and gives it to the Patch Tester of every new playground', async () => {
+    const tab = await context.newPage();
+    const token = `github_pat_${'a1'.repeat(20)}`;
+    const authorizations = [];
+    // The token in the Patch Tester's own options, as its options form shows it.
+    const patchTesterToken = async (current) => {
+      const frame = await (await tab.waitForSelector('#joomla')).contentFrame();
+
+      await frame.goto(`${current.siteUrl}/administrator/index.php?option=com_config&view=component&component=com_patchtester`, { timeout: 120000 });
+
+      return frame.locator('#jform_gh_token').inputValue();
+    };
+
+    await tab.route('https://api.github.com/repos/joomla/joomla-cms/pulls/12345', (route) => {
+      authorizations.push(route.request().headers().authorization ?? null);
+      route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ title: 'A test pull request', base: { ref: '6.2-dev' }, html_url: 'https://github.com/joomla/joomla-cms/pull/12345' }),
+      });
+    });
+
+    try {
+      // A playground with the Patch Tester and no token: the button is there, the Patch Tester has none.
+      let current = await waitForPlaygroundAt(tab, `${appUrl}?blueprint=patchtester`);
+
+      assert.deepEqual(current.patchTester, { installed: true, hasToken: false, changed: false });
+      await tab.waitForSelector('#github-token:not([hidden]):not([disabled])', { timeout: 60000 });
+
+      // Entered once: remembered, and given to this playground's Patch Tester.
+      await tab.click('#github-token');
+      await tab.fill('#token-input', 'not a token');
+      await tab.click('#token-save');
+      assert.match(await tab.locator('#token-error').textContent(), /does not look like a GitHub token/);
+      await tab.fill('#token-input', token);
+      await tab.click('#token-save');
+      await tab.waitForSelector('#token-dialog:not([open])', { state: 'attached' });
+      assert.equal(await tab.evaluate(() => localStorage.getItem('joomla-playground-github-token')), token);
+      assert.equal(await patchTesterToken(current), token);
+
+      // A new playground for a pull request: its Patch Tester has the token at once, and the playground's own
+      // question to GitHub sends it too.
+      current = await waitForPlaygroundAt(tab, `${appUrl}?pr=12345`, current.siteUrl);
+      assert.deepEqual(current.patchTester, { installed: true, hasToken: true, changed: true });
+      assert.deepEqual(authorizations, [`Bearer ${token}`]);
+      assert.equal(await patchTesterToken(current), token);
+
+      // Forgotten: gone from the browser and from this playground's Patch Tester.
+      await tab.click('#github-token');
+      await tab.click('#token-forget');
+      await tab.waitForFunction(() => /remembers no token/.test(document.querySelector('#token-state').textContent));
+      assert.equal(await tab.evaluate(() => localStorage.getItem('joomla-playground-github-token')), null);
+      assert.equal(await tab.evaluate(() => window.joomlaPlayground.patchTester.hasToken), false);
+      await tab.click('#token-dialog header button');
+      assert.equal(await patchTesterToken(current), '');
+    } finally {
+      await tab.evaluate(() => localStorage.removeItem('joomla-playground-github-token')).catch(() => {});
+      await tab.close();
+    }
+  });
+
   test('the overview (overview/) links to the playground, its demos and the guided tours', async () => {
     const tab = await context.newPage();
 

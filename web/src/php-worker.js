@@ -64,7 +64,7 @@ function serialized(task) {
   return run;
 }
 
-const actions = { boot, save, exportSite, flush, pullRequestTest };
+const actions = { boot, save, exportSite, flush, pullRequestTest, patchTester };
 
 self.onmessage = async ({ data }) => {
   const action = actions[data?.type];
@@ -486,6 +486,69 @@ async function pullRequestTest({ pullRequest }) {
   );
 
   return { value: Number(response.text.trim()) || null };
+}
+
+/**
+ * The Patch Tester's GitHub token (its options gh_auth and gh_token in #__extensions), for the token this browser
+ * remembers (github-token.js):
+ *
+ * - set: a token to fill in. Only when the Patch Tester has none yet, unless overwrite is true.
+ * - clear: a token to remove again, if the Patch Tester has exactly that one.
+ *
+ * @returns {{installed: boolean, hasToken: boolean, changed: boolean}}
+ */
+async function patchTester({ set = null, overwrite = false, clear = null } = {}) {
+  for (const token of [set, clear]) {
+    if (token !== null && !/^[A-Za-z0-9_]{20,255}$/.test(token)) {
+      throw new Error('Not a GitHub token');
+    }
+  }
+
+  const response = await serialized(() =>
+    runPhp(state.php, `
+      $db = new PDO('sqlite:' . ${JSON.stringify(DOCUMENT_ROOT)} . '/data/joomla.sqlite');
+      $args = json_decode('${JSON.stringify({ set, overwrite: Boolean(overwrite), clear })}', true);
+      $result = ['installed' => false, 'hasToken' => false, 'changed' => false];
+
+      try {
+          $row = $db->query("SELECT extension_id, params FROM jos_extensions WHERE element = 'com_patchtester' AND type = 'component'")->fetch(PDO::FETCH_ASSOC);
+      } catch (PDOException) {
+          $row = false;
+      }
+
+      if ($row) {
+          $params = json_decode((string) $row['params'], true) ?: [];
+          $current = (string) ($params['gh_token'] ?? '');
+
+          if ($args['set'] !== null && ($current === '' || $args['overwrite']) && $current !== $args['set']) {
+              $params = array_merge($params, ['gh_auth' => 'token', 'gh_token' => $args['set']]);
+              $result['changed'] = true;
+          } elseif ($args['clear'] !== null && $current === $args['clear']) {
+              $params['gh_token'] = '';
+              $result['changed'] = true;
+          }
+
+          if ($result['changed']) {
+              $statement = $db->prepare('UPDATE jos_extensions SET params = ? WHERE extension_id = ?');
+              $statement->execute([json_encode($params), $row['extension_id']]);
+          }
+
+          $result['installed'] = true;
+          $result['hasToken'] = ($params['gh_token'] ?? '') !== '';
+      }
+
+      echo json_encode($result);
+    `)
+  );
+
+  const result = JSON.parse(response.text.trim());
+
+  // A saved site keeps the change.
+  if (result.changed) {
+    scheduleSnapshot({ now: true });
+  }
+
+  return { value: result };
 }
 
 /**

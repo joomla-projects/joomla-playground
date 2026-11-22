@@ -225,6 +225,38 @@
       #mail-list { border-right: 0; border-bottom: 1px solid var(--line); }
     }
 
+    #token-dialog {
+      width: min(560px, calc(100vw - 32px));
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+      color: var(--text);
+      background: var(--page);
+    }
+
+    #token-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+    #token-dialog header { justify-content: space-between; }
+    #token-dialog .body { display: grid; gap: 12px; padding: 16px; }
+    #token-dialog p { margin: 0; line-height: 1.5; }
+    #token-dialog input { width: 100%; box-sizing: border-box; padding: 6px 8px; font: 13px ui-monospace, Consolas, monospace; }
+    #token-dialog .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+    #token-dialog .actions button {
+      padding: 4px 12px;
+      border: 1px solid var(--link-border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--link);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    #token-dialog .actions button:disabled { opacity: 0.4; cursor: default; }
+    #token-dialog #token-forget { color: var(--danger); border-color: var(--danger-border); }
+    #token-state { color: var(--text-muted); font-size: 13px; }
+    #token-error { color: var(--danger); font-size: 13px; }
+
     #stage {
       position: relative;
       flex: 1;
@@ -279,6 +311,7 @@
       <a id="pull-request-link" target="_blank" rel="noopener"></a>
       <button id="pull-request-toggle" type="button" disabled></button>
     </span>
+    <button id="github-token" type="button" hidden title="The GitHub token the Patch Tester uses: remembered in this browser for every new playground">GitHub token…</button>
     <span id="status">Loading</span>
     <span class="spacer"></span>
     <span><span id="credentials-label">Super User:</span> <span id="credentials">…</span></span>
@@ -305,6 +338,34 @@
         <pre id="mail-text"></pre>
       </div>
     </div>
+  </dialog>
+  <dialog id="token-dialog">
+    <header>
+      <h1>GitHub token for the Patch Tester</h1>
+      <form method="dialog"><button type="submit">Close</button></form>
+    </header>
+    <form id="token-form" class="body" method="dialog">
+      <p>
+        The Patch Tester asks GitHub for the pull requests and their files. With a token, GitHub allows it far more
+        requests. This browser remembers the token on this computer and gives it to every new playground with the Patch
+        Tester, so you enter it once.
+      </p>
+      <p>
+        <strong>Use a token without permissions.</strong> The pages of this site can read it, and that includes the pull
+        requests you test. Make a
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
+        with access to public repositories only (read-only) and no further permissions: then it gives nothing beyond the
+        higher rate limit.
+      </p>
+      <label for="token-input">Token</label>
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+      <span id="token-state"></span>
+      <span id="token-error" role="alert"></span>
+      <div class="actions">
+        <button id="token-forget" type="button">Forget</button>
+        <button id="token-save" type="submit" value="save">Save</button>
+      </div>
+    </form>
   </dialog>
   <script type="module" src="./src/main.js"></script>
 </body>
