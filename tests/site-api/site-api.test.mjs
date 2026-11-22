@@ -221,6 +221,41 @@ describe('running code', () => {
     assert.match(unknown.output, /not defined|no:such-command/i);
   });
 
+  test('cli installs an extension whose install script uses the constants of cli/joomla.php', async () => {
+    // Like Weblinks: its script.php compares PHP_VERSION with JOOMLA_MINIMUM_PHP.
+    const files = {
+      'mcptest.xml': `<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+  <name>plg_system_mcptest</name>
+  <version>1.0.0</version>
+  <scriptfile>script.php</scriptfile>
+  <files><filename plugin="mcptest">mcptest.php</filename></files>
+</extension>`,
+      'mcptest.php': "<?php defined('_JEXEC') or die;",
+      'script.php': `<?php
+class PlgSystemMcptestInstallerScript
+{
+    public function preflight($type, $parent)
+    {
+        return version_compare(PHP_VERSION, JOOMLA_MINIMUM_PHP, '>=');
+    }
+}`,
+    };
+
+    await call('runPhp', {
+      code: `$zip = new ZipArchive(); $zip->open('tmp/plg_system_mcptest.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        foreach (json_decode(base64_decode('${Buffer.from(JSON.stringify(files)).toString('base64')}'), true) as $name => $text) {
+            $zip->addFromString($name, $text);
+        }
+        $zip->close();`,
+    });
+
+    const installed = await call('cli', { args: ['extension:install', '--path=tmp/plg_system_mcptest.zip'] });
+
+    assert.equal(installed.exitCode, 0, installed.output);
+    assert.match(installed.output, /successful/i);
+  });
+
   test('an unknown operation is refused', async () => {
     assert.throws(() => api.call('format'), { code: 'UNKNOWN_OPERATION' });
     assert.throws(() => api.call('toString'), { code: 'UNKNOWN_OPERATION' });

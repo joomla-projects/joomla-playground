@@ -517,6 +517,10 @@ function consoleRunner(root, argv) {
     defined('STDERR') || define('STDERR', STDOUT);
     const _JEXEC = 1;
 
+    // cli/joomla.php defines this, and install scripts of extensions use it: take its value from that file.
+    preg_match("/JOOMLA_MINIMUM_PHP\\s*=\\s*'([^']+)'/", (string) @file_get_contents('${root}/cli/joomla.php'), $minimum);
+    define('JOOMLA_MINIMUM_PHP', $minimum[1] ?? '8.1.0');
+
     if (file_exists('${root}/defines.php')) {
         require_once '${root}/defines.php';
     }
