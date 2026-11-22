@@ -16,12 +16,6 @@ sent to a server.
 
 ## Demos
 
-- **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
-  English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
-  [demonstration data](https://github.com/ceford/cefjdemos-plg-demodata) of Clifford E Ford. It starts in a few
-  seconds, from a prebuilt copy of
-  the site. Add `&fresh=1` to watch the blueprint build it in your browser instead: that takes about 45 seconds,
-  plus a minute for the Smart Search index while you can already look around.
 - **Patch Tester:** <https://joomla-projects.github.io/joomla-playground/?blueprint=patchtester>. Joomla with the
   [Patch Tester](https://github.com/joomla-extensions/patchtester) installed. Click **Fetch Data** to get the open
   pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token in the Patch
@@ -34,6 +28,12 @@ sent to a server.
   changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
   version of the pull request's branch (6.3-dev, 6.2 or 5.4), or says when it does not have it. Changes to JavaScript or
   CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
+- **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
+  English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
+  [demonstration data](https://github.com/ceford/cefjdemos-plg-demodata) of Clifford E Ford. It starts in a few
+  seconds, from a prebuilt copy of
+  the site. Add `&fresh=1` to watch the blueprint build it in your browser instead: that takes about 45 seconds,
+  plus a minute for the Smart Search index while you can already look around.
 - **Weblinks:** <https://joomla-projects.github.io/joomla-playground/?blueprint=weblinks>. Joomla with
   [Weblinks](https://github.com/joomla-extensions/weblinks) installed, the component for a directory of links that
   used to be part of Joomla. It opens on its list in the administrator.
