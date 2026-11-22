@@ -11,9 +11,11 @@
  *   php bin/build-browser-bundles.php [--out=web/public/joomla] [--version=<one version>] [--no-languages]
  *
  * Output (in --out):
- *   <version>/     one bundle: site.zip, media/, manifest.json, and languages/ with the accredited language packs
- *                  (bin/download-language-packs.php), unless --no-languages
- *   versions.json  { "default": "6.2.0", "versions": [ <manifest of each bundle>, ... ] }
+ *   <version>/            one bundle: site.zip, media/, manifest.json, and languages/ with the accredited language packs
+ *                         (bin/download-language-packs.php), unless --no-languages
+ *   versions.json         { "default": "6.2.0", "versions": [ <manifest of each bundle>, ... ] }
+ *   joomla-core-loader.js Joomla's loader web component from the default bundle
+ *   joomla-favicon.svg    Joomla's favicon from the default bundle
  *
  * A Full Package that is not in .cache/ yet is downloaded from the joomla/joomla-cms releases on GitHub. At the end,
  * the files of the playground's own blueprints are downloaded too (bin/download-blueprint-assets.php).
@@ -93,9 +95,11 @@ foreach ($list['versions'] as $version) {
 
 file_put_contents($out . '/versions.json', json_encode(['default' => $list['default'], 'versions' => $manifests], JSON_PRETTY_PRINT) . "\n");
 
-// Joomla's loader, which the page shows while a playground starts (before it knows which bundle it will use).
+// Joomla's loader and favicon, which the page shows while a playground starts (before it knows which bundle it will use).
 copy($out . '/' . $list['default'] . '/media/system/js/joomla-core-loader.min.js', $out . '/joomla-core-loader.js')
     || fail('No joomla-core-loader.min.js in the bundle of Joomla ' . $list['default']);
+copy($out . '/' . $list['default'] . '/media/system/images/joomla-favicon.svg', $out . '/joomla-favicon.svg')
+    || fail('No joomla-favicon.svg in the bundle of Joomla ' . $list['default']);
 
 echo "== Files of the playground's blueprints\n";
 $process = proc_open([PHP_BINARY, __DIR__ . '/download-blueprint-assets.php'], [1 => STDOUT, 2 => STDERR], $pipes);

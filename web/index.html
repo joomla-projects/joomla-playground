@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Joomla Playground</title>
+  <link rel="icon" type="image/svg+xml" href="./joomla/joomla-favicon.svg">
+  <link rel="preload" href="./joomla/versions.json" as="fetch" crossorigin fetchpriority="high">
+  <link rel="modulepreload" href="./joomla/joomla-core-loader.js">
   <style>
     :root {
       --bar: #1c2b4a;
@@ -18,26 +21,53 @@
     * { box-sizing: border-box; }
 
     html, body {
-      height: 100%;
+      block-size: 100%;
       margin: 0;
       background: var(--page);
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
     body {
+      block-size: 100dvh;
       display: flex;
       flex-direction: column;
     }
 
     header {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px 16px;
+      flex-direction: column;
+      gap: 6px;
       padding: 8px 16px;
       background: var(--bar);
       color: var(--bar-text);
       font-size: 14px;
+    }
+
+    header :where(a:any-link, button, select, summary):focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    #sites-list :where(a:any-link, button):focus-visible {
+      outline-color: var(--bar);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+    }
+
+    .statusbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 16px;
+      padding-block-start: 6px;
+      border-block-start: 1px solid rgba(185, 196, 216, 0.2);
+      font-size: 13px;
+      line-height: 1.4;
     }
 
     header h1 {
@@ -47,6 +77,7 @@
     }
 
     header button {
+      min-block-size: 26px;
       padding: 4px 12px;
       border: 1px solid var(--muted);
       border-radius: 4px;
@@ -61,11 +92,34 @@
       cursor: default;
     }
 
-    #status { color: var(--accent); }
-    #status.error { color: var(--error); white-space: pre-wrap; }
+    #status {
+      flex: 1 1 18rem;
+      min-inline-size: 0;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #status.error {
+      color: var(--error);
+      white-space: pre-wrap;
+      overflow: visible;
+    }
+
     #info, #credentials-label, .version { color: var(--muted); }
 
+    .versions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      margin-inline-start: auto;
+    }
+
     .version select {
+      block-size: 26px;
       padding: 2px 4px;
       border: 1px solid var(--muted);
       border-radius: 4px;
@@ -73,14 +127,38 @@
       color: var(--bar-text);
       font: inherit;
     }
-    #credentials { font-family: ui-monospace, Consolas, monospace; }
-    .spacer { flex: 1; }
+
+    #joomla-version { inline-size: 5.5rem; }
+    #php-version { inline-size: 4rem; }
+
+    .credentials {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 4px;
+      max-inline-size: 100%;
+    }
+
+    #credentials {
+      display: inline-block;
+      min-inline-size: min(32ch, calc(100dvw - 32px));
+      max-inline-size: 100%;
+      overflow-wrap: anywhere;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+
+    #info {
+      display: inline-block;
+      min-inline-size: min(28ch, calc(100dvw - 32px));
+      min-block-size: 1lh;
+      white-space: nowrap;
+    }
 
     #pull-request:not([hidden]) { display: contents; }
     #pull-request-link { color: var(--bar-text); }
 
     .separator {
-      width: 1px;
+      inline-size: 1px;
       align-self: stretch;
       background: var(--muted);
       opacity: 0.4;
@@ -89,6 +167,7 @@
     #sites-menu { position: relative; }
 
     #sites-menu summary {
+      min-block-size: 26px;
       padding: 4px 12px;
       border: 1px solid var(--muted);
       border-radius: 4px;
@@ -102,10 +181,10 @@
     #sites-list {
       position: absolute;
       z-index: 10;
-      top: calc(100% + 6px);
-      left: 0;
-      min-width: 320px;
-      max-width: calc(100vw - 32px);
+      inset-block-start: calc(100% + 6px);
+      inset-inline-start: 0;
+      min-inline-size: 320px;
+      max-inline-size: calc(100dvw - 32px);
       margin: 0;
       padding: 6px 0;
       list-style: none;
@@ -130,7 +209,7 @@
     #sites-list button.delete { color: #a51d2d; border-color: #c6a0a6; }
 
     #mail-count:not(:empty) {
-      margin-left: 4px;
+      margin-inline-start: 4px;
       padding: 0 6px;
       border-radius: 8px;
       background: var(--accent);
@@ -139,8 +218,8 @@
     }
 
     #mail-dialog {
-      width: min(1000px, calc(100vw - 32px));
-      height: min(700px, calc(100vh - 64px));
+      inline-size: min(1000px, calc(100% - 32px));
+      block-size: min(700px, calc(100dvh - 64px));
       padding: 0;
       border: 0;
       border-radius: 8px;
@@ -152,44 +231,47 @@
     #mail-dialog[open] { display: grid; grid-template-rows: auto 1fr; }
     #mail-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
 
-    #mail-dialog header { justify-content: space-between; }
-    #mail-dialog .body { display: grid; grid-template-columns: minmax(200px, 1fr) 2fr; min-height: 0; }
+    #mail-dialog header { flex-direction: row; align-items: center; justify-content: space-between; }
+    #mail-dialog .body { display: grid; grid-template-columns: minmax(200px, 1fr) 2fr; min-block-size: 0; }
 
     #mail-list {
       margin: 0;
       padding: 0;
       overflow: auto;
+      overscroll-behavior: contain;
       list-style: none;
-      border-right: 1px solid #ddd;
+      border-inline-end: 1px solid #ddd;
     }
 
-    #mail-list li { padding: 8px 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+    #mail-list li { padding: 8px 12px; border-block-end: 1px solid #eee; cursor: pointer; }
     #mail-list li.selected { background: #e8f0fb; }
     #mail-list li.empty { color: #666; cursor: default; }
     #mail-list .subject { font-weight: 600; }
     #mail-list .meta { font-size: 12px; color: #666; }
 
-    #mail-view { display: grid; grid-template-rows: auto 1fr; min-height: 0; }
-    #mail-headers { margin: 0; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid #eee; }
-    #mail-headers dt { float: left; clear: left; width: 64px; color: #666; }
-    #mail-headers dd { margin-left: 72px; }
-    #mail-text { margin: 0; padding: 12px; overflow: auto; white-space: pre-wrap; font: 13px ui-monospace, Consolas, monospace; }
-    #mail-html { width: 100%; height: 100%; border: 0; }
+    #mail-view { display: grid; grid-template-rows: auto 1fr; min-block-size: 0; }
+    #mail-headers { margin: 0; padding: 8px 12px; font-size: 13px; border-block-end: 1px solid #eee; }
+    #mail-headers dt { float: inline-start; clear: inline-start; inline-size: 64px; color: #666; }
+    #mail-headers dd { margin-inline-start: 72px; }
+    #mail-text { margin: 0; padding: 12px; overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; font: 13px ui-monospace, Consolas, monospace; }
+    #mail-html { display: block; inline-size: 100%; block-size: 100%; border: 0; }
 
     @media (max-width: 640px) {
       #mail-dialog .body { grid-template-columns: 1fr; grid-template-rows: 40% 1fr; }
-      #mail-list { border-right: 0; border-bottom: 1px solid #ddd; }
+      #mail-list { border-inline-end: 0; border-block-end: 1px solid #ddd; }
     }
 
     #stage {
       position: relative;
       flex: 1;
+      min-block-size: 0;
       display: flex;
     }
 
     iframe {
+      display: block;
       flex: 1;
-      width: 100%;
+      inline-size: 100%;
       border: 0;
     }
 
@@ -198,6 +280,7 @@
       position: absolute;
       inset: 0;
       z-index: 5;
+      contain: layout style paint;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -208,50 +291,74 @@
       font-size: 16px;
     }
 
+    /* Reserve the loader's size before the custom element upgrades, preventing CLS. */
+    joomla-core-loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 160px;
+      block-size: 160px;
+      flex-shrink: 0;
+    }
+
+    #loading-status {
+      margin: 0;
+      inline-size: 100%;
+      padding-inline: 16px;
+      min-block-size: 2lh;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
     #loading[hidden] { display: none; }
     #loading.error #loading-status { color: #a51d2d; }
-    #loading.error joomla-core-loader { display: none; }
+    #loading.error joomla-core-loader { visibility: hidden; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Joomla Playground</h1>
-    <button id="open-site" type="button" disabled>Site</button>
-    <button id="open-admin" type="button" disabled>Administrator</button>
-    <span class="separator"></span>
-    <button id="new-site" type="button" disabled title="Start a new, empty playground">New</button>
-    <button id="reset-site" type="button" disabled title="Throw this playground away and start again from the same link">Start over</button>
-    <button id="save-site" type="button" disabled title="Keep this playground in your browser">Save…</button>
-    <button id="export-site" type="button" disabled title="Download the whole site as a zip">Export</button>
-    <button id="import-site" type="button" disabled title="Start a playground from an exported zip">Import…</button>
-    <input id="import-file" type="file" accept=".zip,application/zip" hidden>
-    <details id="sites-menu">
-      <summary>My sites</summary>
-      <ul id="sites-list"></ul>
-    </details>
-    <button id="mail" type="button" disabled title="The mails this site sent: they are caught, not delivered">Mail<span id="mail-count"></span></button>
-    <span id="pull-request" hidden>
-      <span class="separator"></span>
-      <a id="pull-request-link" target="_blank" rel="noopener"></a>
-      <button id="pull-request-toggle" type="button" disabled></button>
-    </span>
-    <span id="status">Loading</span>
-    <span class="spacer"></span>
-    <span><span id="credentials-label">Super User:</span> <span id="credentials">…</span></span>
-    <label class="version">Joomla <select id="joomla-version" disabled title="Joomla version"></select></label>
-    <label class="version">PHP <select id="php-version" disabled title="PHP version (WebAssembly)"></select></label>
-    <span id="info"></span>
+    <div class="toolbar">
+      <h1>Joomla Playground</h1>
+      <button id="open-site" type="button" disabled>Site</button>
+      <button id="open-admin" type="button" disabled>Administrator</button>
+      <span class="separator" aria-hidden="true"></span>
+      <button id="new-site" type="button" disabled title="Start a new, empty playground">New</button>
+      <button id="reset-site" type="button" disabled title="Throw this playground away and start again from the same link">Start over</button>
+      <button id="save-site" type="button" disabled title="Keep this playground in your browser">Save…</button>
+      <button id="export-site" type="button" disabled title="Download the whole site as a zip">Export</button>
+      <button id="import-site" type="button" disabled title="Start a playground from an exported zip">Import…</button>
+      <input id="import-file" type="file" accept=".zip,application/zip" hidden>
+      <details id="sites-menu">
+        <summary>My sites</summary>
+        <ul id="sites-list"></ul>
+      </details>
+      <button id="mail" type="button" disabled title="The mails this site sent: they are caught, not delivered">Mail<span id="mail-count"></span></button>
+      <span id="pull-request" hidden>
+        <span class="separator" aria-hidden="true"></span>
+        <a id="pull-request-link" target="_blank" rel="noopener"></a>
+        <button id="pull-request-toggle" type="button" disabled></button>
+      </span>
+      <span class="versions">
+        <label class="version" for="joomla-version">Joomla <select id="joomla-version" disabled title="Joomla version"></select></label>
+        <label class="version" for="php-version">PHP <select id="php-version" disabled title="PHP version (WebAssembly)"></select></label>
+      </span>
+    </div>
+    <div class="statusbar">
+      <span id="status">Loading</span>
+      <span class="credentials"><span id="credentials-label">Super User:</span> <span id="credentials">…</span></span>
+      <span id="info"></span>
+    </div>
   </header>
-  <div id="stage">
+  <main id="stage">
     <iframe id="joomla" title="Joomla"></iframe>
-    <div id="loading" role="status" aria-live="polite">
-      <joomla-core-loader inline size="160" color="transparent"></joomla-core-loader>
+    <div id="loading" role="status">
+      <joomla-core-loader inline size="160" color="transparent" aria-hidden="true"></joomla-core-loader>
       <p id="loading-status">Loading</p>
     </div>
-  </div>
-  <dialog id="mail-dialog">
+  </main>
+  <dialog id="mail-dialog" closedby="any" aria-labelledby="mail-dialog-title">
     <header>
-      <h1>Mail sent by this playground</h1>
+      <h1 id="mail-dialog-title">Mail sent by this playground</h1>
       <form method="dialog"><button type="submit">Close</button></form>
     </header>
     <div class="body">

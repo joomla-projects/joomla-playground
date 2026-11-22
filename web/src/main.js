@@ -45,6 +45,8 @@ const elements = {
 };
 
 let worker = null;
+let workerUsed = false;
+let workerError = null;
 let playground = null;
 
 /** The pull request of joomla-cms this playground tests (?pr=): { number, test }, or null; test is the id of the
@@ -70,6 +72,7 @@ let selectedMail = null;
 
 function setStatus(message, isError = false) {
   elements.status.textContent = message;
+  elements.status.title = message;
   elements.status.classList.toggle('error', isError);
 
   // While the loader shows, it says the same.
@@ -88,9 +91,11 @@ function setLoading(loading) {
 import(/* @vite-ignore */ new URL('joomla/joomla-core-loader.js', base).href).catch(() => {});
 
 function setBusy(busy) {
-  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php, elements.pullRequestToggle]) {
+  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php]) {
     button.disabled = busy;
   }
+
+  elements.pullRequestToggle.disabled = busy || !pullRequest;
 
   // A saved site keeps the Joomla version it was made with.
   elements.joomla.disabled = busy || Boolean(playground?.site);
@@ -116,6 +121,8 @@ function call(type, payload = {}, transfer = []) {
 function startWorker() {
   worker?.terminate();
   worker = new Worker(new URL('./php-worker.js', import.meta.url), { type: 'module' });
+  workerUsed = false;
+  workerError = null;
   mails = [];
   selectedMail = null;
   readyStatus = '';
@@ -139,8 +146,16 @@ function startWorker() {
     }
   };
   worker.onerror = (event) => {
+    const error = new Error(event.message || 'The PHP worker failed');
+
+    if (pending.size === 0) {
+      workerError = error;
+      worker?.terminate();
+      worker = null;
+    }
+
     for (const { reject } of pending.values()) {
-      reject(new Error(event.message || 'The PHP worker failed'));
+      reject(error);
     }
 
     pending.clear();
@@ -154,7 +169,19 @@ async function boot(options = {}, transfer = []) {
   setBusy(true);
   setLoading(true);
   elements.frame.src = 'about:blank';
-  startWorker();
+
+  if (workerError && !workerUsed) {
+    const error = workerError;
+
+    workerError = null;
+    throw error;
+  }
+
+  if (!worker || workerUsed) {
+    startWorker();
+  }
+
+  workerUsed = true;
 
   // The scope ends with the Joomla version: the service worker serves media files from that bundle.
   const joomla = options.joomla ?? bundles.default;
@@ -570,6 +597,15 @@ function joomlaForBranch(branch) {
   };
 }
 
+function preparePullRequest(number) {
+  elements.pullRequestLink.textContent = `PR #${number}`;
+  elements.pullRequestLink.href = `https://github.com/joomla/joomla-cms/pull/${number}`;
+  elements.pullRequestLink.title = 'The pull request on GitHub';
+  elements.pullRequestToggle.textContent = 'Apply patch';
+  elements.pullRequestToggle.disabled = true;
+  elements.pullRequest.hidden = false;
+}
+
 /**
  * Shows the pull request in the toolbar, with a button to apply or revert it.
  */
@@ -580,6 +616,7 @@ async function showPullRequest(number, info) {
   elements.pullRequestLink.title = info ? `${info.title} (${info.branch})` : 'The pull request on GitHub';
   elements.pullRequest.hidden = false;
   renderPullRequest();
+  elements.pullRequestToggle.disabled = false;
 }
 
 function renderPullRequest() {
@@ -660,9 +697,18 @@ async function start() {
     throw new Error('This browser does not support service workers (they need HTTPS or localhost).');
   }
 
-  // Not awaited: PHP and the site download meanwhile, and the frame waits for it (see show()).
+  // Reserve the pull request controls in the toolbar up front so unhiding them after boot does not shift the layout.
+  const url = new URL(location.href);
+  const prParam = url.searchParams.get('pr');
+
+  if (prParam && /^[1-9][0-9]*$/.test(prParam)) {
+    preparePullRequest(Number(prParam));
+  }
+
+  // Not awaited: the service worker and PHP worker load in parallel with versions.json and any blueprint.
   setStatus('Starting');
   serviceWorkerReady = navigator.serviceWorker.register(new URL('sw.js', base), { scope: base.pathname }).then(newestServiceWorker);
+  startWorker();
 
   bundles = await (await fetch(new URL('joomla/versions.json', base))).json();
   elements.joomla.replaceChildren(...bundles.versions.map((bundle) => new Option(bundle.joomla, bundle.joomla)));
@@ -691,7 +737,6 @@ async function start() {
   document.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && flush());
   addEventListener('pagehide', flush);
 
-  const url = new URL(location.href);
   const site = url.searchParams.get('site');
   const blueprint = await blueprintFromUrl(url);
   const prebuilt = site ? null : await prebuiltDemo(blueprint, url);
@@ -738,6 +783,11 @@ async function start() {
 }
 
 start().catch((error) => {
+  if (!playground) {
+    worker?.terminate();
+    worker = null;
+  }
+
   console.error(error);
   setStatus(error.message, true);
 });

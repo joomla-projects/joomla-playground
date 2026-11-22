@@ -1022,6 +1022,7 @@ async function download(url, what = 'Joomla') {
   const reader = response.body.getReader();
   const chunks = [];
   let received = 0;
+  let lastPercent = -1;
 
   for (;;) {
     const { done, value } = await reader.read();
@@ -1034,7 +1035,12 @@ async function download(url, what = 'Joomla') {
     received += value.length;
 
     if (total) {
-      progress(`Downloading ${what}: ${Math.round((received / total) * 100)}% of ${(total / 1048576).toFixed(1)} MB`);
+      const percent = Math.min(100, Math.round((received / total) * 100));
+
+      if (percent !== lastPercent) {
+        lastPercent = percent;
+        progress(`Downloading ${what}: ${percent}% of ${(total / 1048576).toFixed(1)} MB`);
+      }
     }
   }
 
