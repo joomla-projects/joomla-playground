@@ -18,9 +18,11 @@ sent to a server.
 
 - **Patch Tester:** <https://joomla-projects.github.io/joomla-playground/?blueprint=patchtester>. Joomla with the
   [Patch Tester](https://github.com/joomla-extensions/patchtester) installed. Click **Fetch Data** to get the open
-  pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token in the Patch
-  Tester's Options, GitHub allows 60 requests an hour; one Fetch Data uses about four. Never put a token in a
-  blueprint: anyone with the link can read it.
+  pull requests of Joomla from GitHub, then **Apply Patch** to test one. Without a GitHub token, GitHub allows 60
+  requests an hour; one Fetch Data uses about four. Click **GitHub token…** in the toolbar and enter one: the
+  browser remembers it and gives it to the Patch Tester of every new playground. Use a fine-grained token with
+  access to public repositories only (read-only) and no permissions, because the pages of the playground can read
+  it, including the pull requests you test. Never put a token in a blueprint: anyone with the link can read it.
 - **Test a pull request of Joomla:** <https://joomla-projects.github.io/joomla-playground/?pr=48831>. Joomla with
   the Patch Tester, and in the toolbar a link to pull request 48831 and an **Apply patch** button. The site opens
   without the patch; the button applies it and shows the same page again, now with the changes. **Revert patch**
@@ -75,6 +77,7 @@ The toolbar above the site:
 | **Mail** | The mails the site sent. They are caught here, not delivered: try a password reset or a contact form. |
 | **Export** | Download the whole site as a zip. |
 | **Import…** | Start a playground from such a zip, e.g. one someone sent you. |
+| **GitHub token…** | With the Patch Tester: the GitHub token the browser remembers for it (see the Patch Tester above). |
 
 On the right:
 - **Joomla** switches the Joomla version (6.3-dev, 6.2 or 5.4): a new temporary playground starts with it.
