@@ -8,6 +8,7 @@
 import { deleteSite, freeSlug, isSiteOpen, listSites, readMeta, renameSite } from './storage.js';
 import { PHP_VERSIONS, blueprintFromUrl } from './blueprint.js';
 import { parseMail } from './mail.js';
+import { forgetToken, gitHubHeaders, rememberToken, rememberedToken } from './github-token.js';
 
 const base = new URL('./', location.href);
 
@@ -43,6 +44,13 @@ const elements = {
   pullRequest: document.querySelector('#pull-request'),
   pullRequestLink: document.querySelector('#pull-request-link'),
   pullRequestToggle: document.querySelector('#pull-request-toggle'),
+  gitHubToken: document.querySelector('#github-token'),
+  tokenDialog: document.querySelector('#token-dialog'),
+  tokenForm: document.querySelector('#token-form'),
+  tokenInput: document.querySelector('#token-input'),
+  tokenState: document.querySelector('#token-state'),
+  tokenError: document.querySelector('#token-error'),
+  tokenForget: document.querySelector('#token-forget'),
 };
 
 let worker = null;
@@ -89,7 +97,7 @@ function setLoading(loading) {
 import(/* @vite-ignore */ new URL('joomla/joomla-core-loader.js', base).href).catch(() => {});
 
 function setBusy(busy) {
-  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php, elements.pullRequestToggle]) {
+  for (const button of [elements.site, elements.admin, elements.newSite, elements.save, elements.exportSite, elements.importSite, elements.mail, elements.php, elements.pullRequestToggle, elements.gitHubToken]) {
     button.disabled = busy;
   }
 
@@ -162,6 +170,8 @@ async function boot(options = {}, transfer = []) {
   const scope = `scope-${Math.random().toString(36).slice(2, 10)}-${joomla.replaceAll('.', '-')}`;
 
   playground = await call('boot', { base: base.href, scope, corsProxy, ...options, joomla }, transfer);
+  // Before the first page: the Patch Tester has the remembered token when that page asks GitHub.
+  await fillGitHubToken();
   show(playground.landingPage ?? '/administrator/');
 
   if (playground.blueprintError) {
@@ -536,7 +546,7 @@ async function pullRequestInfo(number) {
   }
 
   try {
-    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/pulls/${number}`, { headers: { Accept: 'application/vnd.github+json' } });
+    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/pulls/${number}`, { headers: gitHubHeaders() });
 
     if (!response.ok) {
       return null;
@@ -677,6 +687,80 @@ async function togglePullRequest() {
   }
 }
 
+/**
+ * Gives the Patch Tester of a new playground the GitHub token this browser remembers (github-token.js), if it has
+ * none yet; a token entered in the site itself stays. The toolbar shows the GitHub token button where the Patch Tester
+ * is installed.
+ */
+async function fillGitHubToken() {
+  const token = rememberedToken();
+
+  try {
+    playground.patchTester = await call('patchTester', { set: token });
+  } catch (error) {
+    console.error('The Patch Tester did not get the GitHub token:', error);
+    playground.patchTester = null;
+  }
+
+  renderGitHubToken();
+}
+
+function renderGitHubToken() {
+  const remembered = Boolean(rememberedToken());
+  const site = playground?.patchTester;
+
+  elements.gitHubToken.hidden = !site?.installed;
+  elements.gitHubToken.title = site?.hasToken
+    ? `The Patch Tester has a GitHub token${remembered ? ', remembered in this browser for every new playground' : ''}`
+    : 'Give the Patch Tester a GitHub token, remembered in this browser for every new playground';
+  elements.tokenState.textContent = [
+    remembered ? 'This browser remembers a token.' : 'This browser remembers no token.',
+    site?.hasToken ? 'The Patch Tester of this playground has one.' : 'The Patch Tester of this playground has none.',
+  ].join(' ');
+  elements.tokenForget.disabled = !remembered;
+}
+
+function openTokenDialog() {
+  elements.tokenInput.value = '';
+  elements.tokenError.textContent = '';
+  renderGitHubToken();
+  elements.tokenDialog.showModal();
+  elements.tokenInput.focus();
+}
+
+/** Remembers the token and gives it to this playground's Patch Tester, also over a token it had. */
+async function saveGitHubToken(event) {
+  event.preventDefault();
+
+  try {
+    const token = rememberToken(elements.tokenInput.value);
+
+    playground.patchTester = await call('patchTester', { set: token, overwrite: true });
+    elements.tokenDialog.close();
+    setStatus(`${readyStatus} · GitHub token remembered and given to the Patch Tester`);
+  } catch (error) {
+    elements.tokenError.textContent = error.message;
+  }
+
+  renderGitHubToken();
+}
+
+/** Forgets the token, and takes it from this playground's Patch Tester again (if it still has that one). */
+async function forgetGitHubToken() {
+  const token = rememberedToken();
+
+  forgetToken();
+
+  try {
+    playground.patchTester = await call('patchTester', { clear: token });
+    setStatus(`${readyStatus} · GitHub token forgotten`);
+  } catch (error) {
+    elements.tokenError.textContent = error.message;
+  }
+
+  renderGitHubToken();
+}
+
 function startOver() {
   if (confirm('Throw this playground away and start again from the same link?')) {
     location.reload();
@@ -708,6 +792,9 @@ async function start() {
   elements.importFile.onchange = () => elements.importFile.files[0] && importSite(elements.importFile.files[0]);
   elements.sitesMenu.ontoggle = () => elements.sitesMenu.open && renderSites();
   elements.pullRequestToggle.onclick = togglePullRequest;
+  elements.gitHubToken.onclick = openTokenDialog;
+  elements.tokenForm.onsubmit = saveGitHubToken;
+  elements.tokenForget.onclick = forgetGitHubToken;
   elements.mail.onclick = () => {
     elements.mailDialog.showModal();
     renderMails();
