@@ -198,6 +198,61 @@
       font-size: 14px;
     }
 
+    nav.sections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 20px;
+      margin: 0 0 32px;
+      font-size: 15px;
+    }
+
+    h3 { margin: 24px 0 4px; font-size: 18px; }
+
+    .table {
+      overflow-x: auto;
+      margin: 12px 0 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    th, td {
+      padding: 8px 12px 8px 0;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { font-size: 14px; color: var(--muted); font-weight: 600; }
+    td code { white-space: nowrap; }
+
+    details {
+      margin: 16px 0 0;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+    }
+
+    details summary { cursor: pointer; font-weight: 600; }
+    details[open] summary { margin-bottom: 8px; }
+
+    pre {
+      overflow-x: auto;
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--line);
+      font-size: 14px;
+    }
+
+    pre code { padding: 0; background: none; }
+
+    ul.plain, ol.plain { margin: 8px 0 0; padding-left: 1.3em; }
+    ul.plain li, ol.plain li { margin: 4px 0; }
+
     footer {
       padding: 24px 0 40px;
       border-top: 1px solid var(--line);
@@ -218,6 +273,16 @@
   </header>
 
   <main class="wrap">
+    <nav class="sections" aria-label="On this page">
+      <a href="#demos">Demos</a>
+      <a href="#pull-requests">Test a pull request</a>
+      <a href="#tours">Guided tours</a>
+      <a href="#using">Using the playground</a>
+      <a href="#links">Your own link</a>
+      <a href="#export">An export on a server</a>
+      <a href="#more">More</a>
+    </nav>
+
     <section id="home-sites" hidden>
       <h2>Your saved sites</h2>
       <p class="muted">Saved in this browser with <strong>Save…</strong> in the playground. They stay here only:
@@ -225,7 +290,7 @@
       <ul class="links" id="home-sites-list"></ul>
     </section>
 
-    <section>
+    <section id="demos">
       <h2>Demos</h2>
       <p class="muted">Each link starts a playground of its own, already set up.</p>
       <div class="cards">
@@ -239,23 +304,25 @@
           <h3>Multilingual site</h3>
           <p>A site in English, Dutch, German, French and Spanish, about UNESCO World Heritage sites, with the
             <a href="https://github.com/ceford/cefjdemos-plg-demodata">demonstration data</a> of Clifford E Ford.
-            Starts in a few seconds from a prebuilt copy.</p>
+            Starts in a few seconds from a prebuilt copy. Add <code>&amp;fresh=1</code> to watch the blueprint
+            build it instead: about 45 seconds, plus a minute for the Smart Search index while you look around.</p>
           <a class="open" href="../?blueprint=heritage-demo">Open the multilingual site</a>
         </article>
         <article class="card">
           <h3>Weblinks</h3>
           <p>Joomla with <a href="https://github.com/joomla-extensions/weblinks">Weblinks</a>, the component for a
-            directory of links that used to be part of Joomla.</p>
+            directory of links that used to be part of Joomla. It opens on its list in the administrator.</p>
           <a class="open" href="../?blueprint=weblinks">Open Weblinks</a>
         </article>
       </div>
     </section>
 
-    <section>
+    <section id="pull-requests">
       <h2>Test a pull request of Joomla</h2>
       <p class="muted">The site opens without the patch. <strong>Apply patch</strong> in the toolbar applies it and
         shows the same page again, now with the changes; <strong>Revert patch</strong> takes them out, so before and
-        after are one click apart. The playground starts the Joomla version of the pull request's branch.</p>
+        after are one click apart. The playground starts the Joomla version of the pull request's branch, or says
+        when it does not have it.</p>
       <form class="inline" id="home-pr-form">
         <label>Pull request (number or address)
           <input name="pr" required placeholder="48831" size="14" autocomplete="off"></label>
@@ -263,12 +330,21 @@
           <input name="url" placeholder="/administrator/index.php?option=com_config" size="38" autocomplete="off"></label>
         <button type="submit">Test it</button>
       </form>
-      <p class="muted">As a link: <code>…/joomla-playground/?pr=48831</code>, with <code>&amp;url=</code> for the page.
-        Changes to JavaScript or CSS are not built, so only PHP, template, language and XML changes show. See the
-        <a href="https://github.com/joomla/joomla-cms/pulls">open pull requests</a>.</p>
+      <p class="muted">As a link: <code>…/joomla-playground/?pr=48831</code>, with <code>&amp;url=</code> for the page,
+        e.g. <code>?pr=48831&amp;url=/administrator/index.php?option=com_config</code>. Changes to JavaScript or CSS
+        (in <code>build/media_source</code>) are not built, so only PHP, template, language and XML changes show. See
+        the <a href="https://github.com/joomla/joomla-cms/pulls">open pull requests</a>.</p>
+      <h3>A GitHub token</h3>
+      <p>Without a token, GitHub allows the Patch Tester 60 requests an hour; one <strong>Fetch Data</strong> uses
+        about four. Click <strong>GitHub token…</strong> in the playground's toolbar and enter one: this browser
+        remembers it and gives it to the Patch Tester of every new playground, so you enter it once.
+        <strong>Use a token without permissions</strong>, because the pages of this site can read it, including the
+        pull requests you test: a
+        <a href="https://github.com/settings/personal-access-tokens/new">fine-grained token</a> with access to public
+        repositories only (read-only). Never put a token in a blueprint or a link: anyone with the link can read it.</p>
     </section>
 
-    <section>
+    <section id="tours">
       <h2>Guided tours of the Joomla User Guide</h2>
       <p class="muted">Tutorials of the <a href="https://guide.joomla.org/tutorials">Joomla User Guide</a> as guided
         tours: each link opens a playground in the language of the tour, and the tour shows the way step by step.</p>
@@ -279,10 +355,80 @@
         <ul class="links" id="home-tours-list"></ul>
       </div>
       <p class="muted">All tours and languages in one list:
-        <a href="https://github.com/joomla-projects/joomla-playground/blob/main/web/public/blueprints/tours/README.md">the list of tours</a>.</p>
+        <a href="https://github.com/joomla-projects/joomla-playground/blob/main/web/public/blueprints/tours/README.md">the list of tours</a>.
+        The tour starts by itself and waits for you to do each step. The playground changes three things in Joomla's
+        Guided Tours plugin: the tour does not start again inside dialogs such as <em>Menu Item Type</em>, a tour of
+        an earlier playground in the same tab does not continue halfway, and the editor's dialogs and Joomla's
+        <em>Preview</em> come above the tour's overlay, so they can be clicked.</p>
     </section>
 
-    <section>
+    <section id="using">
+      <h2>Using the playground</h2>
+      <p class="muted">You see Joomla's administrator after a few seconds, already logged in as a Super User.</p>
+
+      <h3>The toolbar</h3>
+      <div class="table">
+        <table>
+          <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Site</strong> / <strong>Administrator</strong></td><td>Show the front end or the administrator of the site.</td></tr>
+            <tr><td><strong>New</strong></td><td>Start a new, empty playground.</td></tr>
+            <tr><td><strong>Start over</strong></td><td>Throw this playground away and start again from the same link (and blueprint).</td></tr>
+            <tr><td><strong>Save…</strong></td><td>Keep this playground in your browser under a name. From then on, changes are saved as you work.</td></tr>
+            <tr><td><strong>My sites</strong></td><td>Open, rename or delete the sites you saved.</td></tr>
+            <tr><td><strong>Mail</strong></td><td>The mails the site sent. They are caught here, not delivered: try a password reset or a contact form.</td></tr>
+            <tr><td><strong>Export</strong></td><td>Download the whole site as a zip.</td></tr>
+            <tr><td><strong>Import…</strong></td><td>Start a playground from such a zip, e.g. one someone sent you.</td></tr>
+            <tr><td><strong>GitHub token…</strong></td><td>With the Patch Tester: the GitHub token this browser remembers for it (see <a href="#pull-requests">Test a pull request</a>).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>On the right:</p>
+      <ul class="plain">
+        <li><strong>Joomla</strong> switches the Joomla version: a new temporary playground starts with it. The
+          <em>-dev</em> version is the development branch: the nightly build of the next minor version, which most
+          pull requests are for. It takes a new nightly build on days the branch has changed, and moves on after each
+          minor release. A saved site keeps the version it was made with.</li>
+        <li><strong>PHP</strong> switches the PHP version (8.3, 8.4 or 8.5): a saved site reopens with it, a
+          temporary playground starts again from the same link.</li>
+        <li>The Super User's name and password. Hover over the database driver for timings.</li>
+      </ul>
+
+      <h3>Logging in</h3>
+      <p>The playground logs you in to the administrator by itself. If you log out, or want to log in on the front
+        end: the username is <code>admin</code>, and the password is different for every playground. The toolbar
+        shows it ("Super User: admin / …"), and so does the login form. A saved site keeps its password. A session
+        lasts 4 hours (Joomla's default is 15 minutes); change it under System &gt; Global Configuration &gt; System
+        &gt; Session Lifetime.</p>
+
+      <h3>Temporary or saved?</h3>
+      <ul class="plain">
+        <li>A new playground is temporary: reloading the page or closing the tab throws it away.</li>
+        <li>After <strong>Save…</strong>, the address bar shows <code>?site=&lt;name&gt;</code>. That address reopens
+          the site, also after a reload or a browser restart, and it is listed under <strong>My sites</strong> and on
+          this page.</li>
+        <li>A saved site stays in this browser only (in its private storage for this website). Use
+          <strong>Export</strong> to move a site to another browser or computer, or to keep a copy elsewhere.</li>
+        <li>A saved site can be open in one tab at a time.</li>
+      </ul>
+
+      <h3>Good to know</h3>
+      <ul class="plain">
+        <li>Use a recent Chrome, Edge or other Chromium browser; Firefox and Safari are not tested yet.</li>
+        <li><strong>Languages:</strong> System &gt; Install Languages works. The playground has the accredited
+          language packs on board, so installing one takes a few seconds. <code>?language=nl-NL</code> starts a
+          playground in that language.</li>
+        <li>The site reaches the internet through your browser, so only servers that allow requests from other
+          websites (CORS) answer. Installing or updating extensions from URLs mostly does not work: download the zip
+          and use System &gt; Install &gt; Extensions &gt; <strong>Upload Package File</strong>. A link or blueprint
+          can install extensions from hosts that allow it.</li>
+        <li>The Mail inbox keeps the mails until the page is reloaded.</li>
+        <li>Each tab is its own playground, with its own site and database.</li>
+        <li>Clearing your browser's site data for this address deletes the saved sites.</li>
+      </ul>
+    </section>
+
+    <section id="links">
       <h2>Make your own link</h2>
       <p class="muted">Parameters set up a new playground; combine them with <code>&amp;</code>.</p>
       <ul class="links">
@@ -293,10 +439,123 @@
         <li>Install an extension <code>?extension=&lt;zip URL&gt;</code></li>
         <li>Your own blueprint <code>?blueprint-url=&lt;JSON URL&gt;</code></li>
       </ul>
-      <p class="muted">A blueprint is a small JSON file with the steps to set up a site: install extensions, sample
-        data, languages, articles, settings. See
-        <a href="https://github.com/joomla-projects/joomla-playground#setting-up-a-playground-with-a-link">setting up a
-        playground with a link</a>.</p>
+      <details>
+        <summary>All parameters</summary>
+        <div class="table">
+          <table>
+            <thead><tr><th>Parameter</th><th>Example</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>joomla</code></td><td><code>?joomla=5.4</code></td><td>Joomla version; <code>5</code> also works. <code>?joomla=dev</code> is the development branch</td></tr>
+              <tr><td><code>php</code></td><td><code>?php=8.3</code></td><td>PHP version: 8.3, 8.4 (default) or 8.5</td></tr>
+              <tr><td><code>url</code></td><td><code>?url=/index.php</code></td><td>The page to open first; default <code>/administrator/</code></td></tr>
+              <tr><td><code>login</code></td><td><code>?login=no</code></td><td>Start logged out</td></tr>
+              <tr><td><code>extension</code></td><td><code>?extension=https://example.org/mod_hello.zip</code></td><td>Install an extension package (repeatable)</td></tr>
+              <tr><td><code>language</code></td><td><code>?language=nl-NL</code></td><td>Install that language and make it the default of the site and the administrator</td></tr>
+              <tr><td><code>blueprint-url</code></td><td><code>?blueprint-url=https://example.org/blueprint.json</code></td><td>Set up the site with a blueprint</td></tr>
+              <tr><td><code>blueprint</code></td><td><code>?blueprint=heritage-demo</code></td><td>Set up the site with one of the playground's own blueprints (from its prebuilt copy, if it has one)</td></tr>
+              <tr><td><code>fresh</code></td><td><code>?blueprint=heritage-demo&amp;fresh=1</code></td><td>Run the blueprint, even if there is a prebuilt copy</td></tr>
+              <tr><td><code>pr</code></td><td><code>?pr=48831</code></td><td>Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it</td></tr>
+              <tr><td><code>new</code></td><td><code>?new</code></td><td>An empty playground (the address without parameters is this overview)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>Blueprints: a site set up by a JSON file</summary>
+        <p>A blueprint is a small JSON file with the steps to set up a site. Give its address with
+          <code>?blueprint-url=</code>, or put it in the address itself, after <code>#</code>. This one installs
+          Joomla's blog sample data, renames the site and opens the front end:</p>
+        <pre><code>{
+  "preferredVersions": { "joomla": "6.2", "php": "8.4" },
+  "landingPage": "/index.php",
+  "steps": [
+    { "step": "importSampleData" },
+    { "step": "setGlobalConfig", "values": { "sitename": "My demo" } }
+  ]
+}</code></pre>
+        <div class="table">
+          <table>
+            <thead><tr><th>Step</th><th>Properties</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>installExtension</code></td><td><code>url</code></td><td>Install an extension package (zip)</td></tr>
+              <tr><td><code>enableExtension</code></td><td><code>element</code>, <code>type</code>, <code>folder</code>, <code>client</code>, <code>params</code></td><td>Enable an extension and set its options, e.g. <code>{"element": "debug", "type": "plugin", "folder": "system"}</code></td></tr>
+              <tr><td><code>importSampleData</code></td><td><code>type</code> (default <code>blog</code>), <code>group</code>, <code>query</code></td><td>Install Joomla's sample data, or data of a plugin that works like it</td></tr>
+              <tr><td><code>setGlobalConfig</code></td><td><code>values</code></td><td>Set Global Configuration options (properties of <code>configuration.php</code>)</td></tr>
+              <tr><td><code>setSiteLanguage</code></td><td><code>language</code>, <code>administrator</code></td><td>Make a language the default (its pack is installed if needed)</td></tr>
+              <tr><td><code>runSql</code></td><td><code>sql</code></td><td>Run SQL statements (MySQL syntax; <code>#__</code> is the table prefix)</td></tr>
+              <tr><td><code>runPHP</code></td><td><code>code</code></td><td>Run PHP code in the site's root folder</td></tr>
+              <tr><td><code>writeFile</code></td><td><code>path</code>, <code>data</code></td><td>Write a file into the site</td></tr>
+              <tr><td><code>unzip</code></td><td><code>url</code>, <code>to</code></td><td>Unpack a zip into the site</td></tr>
+              <tr><td><code>login</code></td><td></td><td>Log in as the Super User (done by default)</td></tr>
+              <tr><td><code>installLanguage</code></td><td><code>language</code>, <code>publish</code></td><td>Install a language and publish its content language</td></tr>
+              <tr><td><code>addModule</code></td><td><code>module</code>, <code>title</code>, <code>position</code>, <code>client</code>, <code>params</code>, <code>language</code></td><td>Publish a module on all pages</td></tr>
+              <tr><td><code>addArticle</code></td><td><code>title</code>, <code>text</code>, <code>category</code>, <code>language</code>, <code>featured</code></td><td>Add a published article</td></tr>
+              <tr><td><code>addUserGroup</code></td><td><code>title</code>, <code>parent</code></td><td>Add a user group</td></tr>
+              <tr><td><code>disableExtension</code></td><td><code>element</code>, <code>type</code>, <code>folder</code>, <code>client</code></td><td>Disable an extension</td></tr>
+              <tr><td><code>indexSmartSearch</code></td><td></td><td>Build the Smart Search index, like its Index button</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Any step can have <code>"background": true</code>: it then runs after the playground is ready, while you
+          use it, and the toolbar shows its progress.</p>
+        <p>Downloads (<code>extension</code>, <code>installExtension</code>, <code>unzip</code>) need a host that
+          allows it (CORS headers), such as GitHub Pages or raw.githubusercontent.com; release downloads on GitHub do
+          not. URLs in a blueprint are relative to the blueprint. If a step fails, the playground still starts and the
+          toolbar shows the error.</p>
+      </details>
+    </section>
+
+    <section id="export">
+      <h2>Putting an exported site on a server</h2>
+      <p class="muted">An export (<strong>Export</strong> in the toolbar) is a complete Joomla site that runs on SQLite,
+        with the playground's database driver and its database in <code>data/joomla.sqlite</code>. It runs on an
+        ordinary PHP web server, without MySQL. That is fine for a demo or test site. Joomla itself does not support
+        SQLite, so for a real site, move it to MySQL.</p>
+      <details>
+        <summary>How to put it on a server (PHP 8.3 or newer, with <code>pdo_sqlite</code>)</summary>
+        <ol class="plain">
+          <li><strong>Unpack</strong> the export in the web root.</li>
+          <li><strong>Edit <code>configuration.php</code>:</strong> <code>$live_site = '';</code>; set
+            <code>$tmp_path</code> and <code>$log_path</code> to the full paths of <code>tmp</code> and
+            <code>administrator/logs</code> on the server; and give <code>$secret</code> a new random string. The
+            playground's is the same in every playground.</li>
+          <li><strong>Protect the database.</strong> <code>data/joomla.sqlite</code> holds the whole site, password
+            hashes included. On Apache, <code>data/.htaccess</code> blocks it. On nginx, add a rule that denies
+            <code>/data/</code>, or move the file outside the web root and set <code>$db</code> in
+            <code>configuration.php</code> to its path. PHP must be able to write the file <em>and</em> the
+            <code>data</code> folder.</li>
+          <li><strong>Set a new password</strong> for the Super User. The playground's password was public in its
+            toolbar: <code>php cli/joomla.php user:reset-password --username=admin</code></li>
+        </ol>
+        <p>Optionally, remove the playground's certificate from
+          <code>libraries/vendor/composer/ca-bundle/res/cacert.pem</code>: the block between the two "Joomla Playground
+          CA" lines. Its private key is gone, so it does no harm, and the next Joomla update replaces the file
+          anyway.</p>
+      </details>
+    </section>
+
+    <section id="more">
+      <h2>More</h2>
+      <ul class="plain">
+        <li><strong>Running your own copy:</strong> the playground is a static website: build it once and host it on
+          any web server with HTTPS, such as GitHub Pages. See
+          <a href="https://github.com/joomla-projects/joomla-playground/blob/main/docs/DEVELOPMENT.md">building, running
+          it locally and the tests</a>.</li>
+        <li><strong>How it works:</strong>
+          <a href="https://github.com/joomla-projects/joomla-playground/blob/main/docs/REPORT.md">the report</a>, with
+          what was tried and measured, and <a href="https://github.com/joomla-projects/joomla-playground/blob/main/docs/PLAN.md">the
+          plan</a> for what comes next. It is comparable to <a href="https://wordpress.org/playground/">WordPress
+          Playground</a>, whose PHP-in-WebAssembly runtime it uses.</li>
+        <li><strong>License:</strong> GNU General Public License version 2 or later, like Joomla and WordPress
+          Playground.</li>
+        <li><strong>Credits:</strong> the playground runs on <a href="https://github.com/WordPress/wordpress-playground"><code>@php-wasm</code></a>
+          of WordPress Playground (PHP compiled to WebAssembly) and
+          <a href="https://github.com/WordPress/sqlite-database-integration"><code>WP_MySQL_On_SQLite</code></a> (MySQL
+          emulated on SQLite), both GPL-2.0-or-later; no WordPress itself is used. The demonstration data of the
+          multilingual demo is by Clifford E Ford. All credits are in the
+          <a href="https://github.com/joomla-projects/joomla-playground#credits">README</a>.</li>
+      </ul>
     </section>
   </main>
 
