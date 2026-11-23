@@ -9,7 +9,12 @@
 //   ?pr=48895                                                                         a pull request of joomla-cms
 //                                                                                     to test: the Patch Tester
 //                                                                                     blueprint, and a button to
-//                                                                                     apply and revert it (main.js)
+//                                                                                     apply and revert it (main.js);
+//                                                                                     with the method "package"
+//                                                                                     (pull requests that need a
+//                                                                                     build) no Patch Tester: the
+//                                                                                     button lays Joomla CI's build
+//                                                                                     of it over the site
 //
 // A blueprint:
 //   {
@@ -45,16 +50,20 @@ export const STEPS = {
 const KEYS = ['$schema', 'preferredVersions', 'landingPage', 'login', 'steps', 'meta'];
 
 /**
+ * @param {URL} url
+ * @param {object} [options]
+ * @param {string} [options.pullRequestMethod] how ?pr= is tested (main.js): "patchtester" (the default) or
+ *                                             "package", without the Patch Tester
  * @returns {Promise<object|null>} The blueprint of this page URL, or null when the URL asks for none.
  */
-export async function blueprintFromUrl(url) {
+export async function blueprintFromUrl(url, { pullRequestMethod = 'patchtester' } = {}) {
   const params = url.searchParams;
   const fragment = decodeURIComponent(url.hash.slice(1)).trim();
   let blueprint = null;
 
   if (fragment.startsWith('{')) {
     blueprint = parseJson(fragment, 'the blueprint in the URL');
-  } else if (params.get('blueprint-url') || params.get('blueprint') || params.get('pr')) {
+  } else if (params.get('blueprint-url') || params.get('blueprint') || (params.get('pr') && pullRequestMethod !== 'package')) {
     // A pull request without a blueprint gets the Patch Tester.
     const name = params.get('blueprint') || (params.get('blueprint-url') ? null : 'patchtester');
 

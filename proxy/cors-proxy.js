@@ -32,6 +32,9 @@ export const DEFAULT_ALLOWED_HOSTS = [
   // downloads.joomla.org redirects to Joomla's S3 bucket: that bucket only, not all of S3.
   's3-us-west-2.amazonaws.com/joomla-official-downloads/',
   'joomla-official-downloads.s3.us-west-2.amazonaws.com',
+  // The packages Joomla's CI (Drone) builds of every pull request of joomla-cms ("Download" on the pull request):
+  // only those, not the rest of the host.
+  'artifacts.joomla.org/drone/joomla/joomla-cms/',
 ];
 
 const DEFAULT_MAX_BYTES = 50 * 1024 * 1024;
@@ -116,8 +119,12 @@ export default {
 
       const headers = new Headers(cors);
 
+      // fetch() decodes a compressed body (Content-Encoding: gzip, br): its Content-Length is that of the compressed
+      // bytes, so passing it on would cut the decoded body short.
+      const encoded = response.headers.has('content-encoding');
+
       for (const name of ['content-type', 'content-length', 'content-disposition', 'last-modified', 'etag']) {
-        response.headers.has(name) && headers.set(name, response.headers.get(name));
+        response.headers.has(name) && !(name === 'content-length' && encoded) && headers.set(name, response.headers.get(name));
       }
 
       headers.set('cache-control', response.ok ? 'public, max-age=3600' : 'no-store');

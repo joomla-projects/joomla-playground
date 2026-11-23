@@ -29,8 +29,16 @@ sent to a server.
   takes them out again, so you can switch between before and after. Add `&url=` with the page the pull request
   changes, e.g. `?pr=48831&url=/administrator/index.php?option=com_config`. The playground starts the Joomla
   nightly build of the pull request's branch (6.3-dev, 6.2-dev or 5.4-dev): the branch as it is now, not its last
-  release. It says when it does not have that branch. Changes to JavaScript or
-  CSS (in `build/media_source`) are not built, so only PHP, template, language and XML changes show.
+  release. It says when it does not have that branch. The Patch Tester does not build changes to JavaScript, CSS
+  or Vue (in `media_source`), so with it only PHP, template, language and XML changes show.
+- **Test a pull request that needs a build:** <https://joomla-projects.github.io/joomla-playground/?pr=48901>.
+  For a pull request with the label *NPM Resource Changed* or *Composer Dependency Changed*, the playground uses
+  the build of Joomla's CI instead of the Patch Tester: the package behind the pull request's **Download** check.
+  The button **Apply build** lays it over the site: only the files that differ from the nightly build, with the
+  built JavaScript and CSS. **Revert build** puts the original files back (changes to the database stay). Joomla's
+  CI keeps those packages for about two weeks after the pull request's last commit; without one, the playground
+  says so and falls back to the Patch Tester. `&method=package` or `&method=patchtester` chooses the method
+  yourself. The packages come from artifacts.joomla.org, which needs the playground's CORS proxy.
 - **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
   English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
   [demonstration data](https://github.com/ceford/cefjdemos-plg-demodata) of Clifford E Ford. It starts in a few
@@ -126,7 +134,8 @@ A link can say how a new playground should look. Add these to the address:
 | `blueprint-url` | `?blueprint-url=https://example.org/blueprint.json` | Set up the site with a blueprint |
 | `blueprint` | `?blueprint=heritage-demo` | Set up the site with one of the playground's own blueprints (from its prebuilt copy, if it has one) |
 | `fresh` | `?blueprint=heritage-demo&fresh=1` | Run the blueprint, even if there is a prebuilt copy |
-| `pr` | `?pr=48831` | Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it |
+| `pr` | `?pr=48831` | Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it; for a pull request that needs a build, the build of Joomla's CI instead |
+| `method` | `?pr=48901&method=package` | How `pr` is tested: `package` (the build of Joomla's CI) or `patchtester` |
 
 A **blueprint** is a small JSON file with the steps to set up a site. It can also be put in the address
 itself, after `#`. For example, this one installs Joomla's blog sample data, renames the site and opens the

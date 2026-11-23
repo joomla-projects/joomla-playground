@@ -58,8 +58,9 @@ let workerUsed = false;
 let workerError = null;
 let playground = null;
 
-/** The pull request of joomla-cms this playground tests (?pr=): { number, test }, or null; test is the id of the
- *  Patch Tester's record while the pull request is applied. */
+/** The pull request of joomla-cms this playground tests (?pr=), or null: { number, method: "patchtester", test },
+ *  test being the id of the Patch Tester's record while the pull request is applied; or { number, method: "package",
+ *  package: { folder, built }, applied } for Joomla CI's build of it (see pullRequestMethod()). */
 let pullRequest = null;
 
 /**
@@ -581,12 +582,24 @@ async function prebuiltDemo(blueprint, url) {
   }
 }
 
+/** Labels of joomla-cms for pull requests that need a build before they can be tested (the Patch Tester hides them). */
+const BUILD_LABELS = ['npm resource changed', 'composer dependency changed'];
+
+const NO_PACKAGE = corsProxy
+  ? 'Joomla\'s CI has no build of it (it failed, is still running, or was deleted after about two weeks)'
+  : 'This playground has no CORS proxy to download Joomla CI\'s build of it';
+
+/** A build folder of Joomla's CI for a pull request (its "Download" status on GitHub). */
+const PACKAGE_FOLDER = /^https:\/\/artifacts\.joomla\.org\/drone\/joomla\/joomla-cms\/[A-Za-z0-9._-]+\/[1-9][0-9]*\/downloads\/[1-9][0-9]*$/;
+
 /**
- * What GitHub says about a pull request of joomla-cms: { title, branch, url }, or null when GitHub does not answer
- * (e.g. after 60 requests in an hour without a token). Kept for the tab, so starting over asks GitHub only once.
+ * What GitHub says about a pull request of joomla-cms: { title, branch, url, sha, labels, needsBuild, package }, or
+ * null when GitHub does not answer (e.g. after 60 requests in an hour without a token). package is the build of the
+ * pull request's last commit by Joomla's CI, { folder, built }, or null when there is none (it failed, is still
+ * running, or was deleted: the CI keeps them about two weeks). Kept for the tab, so starting over asks GitHub only once.
  */
 async function pullRequestInfo(number) {
-  const key = `joomla-playground-pr-${number}`;
+  const key = `joomla-playground-pr-v2-${number}`;
 
   try {
     const cached = JSON.parse(sessionStorage.getItem(key));
@@ -606,7 +619,16 @@ async function pullRequestInfo(number) {
     }
 
     const pull = await response.json();
-    const info = { title: pull.title, branch: pull.base?.ref ?? null, url: pull.html_url };
+    const labels = (pull.labels ?? []).map((label) => label.name);
+    const info = {
+      title: pull.title,
+      branch: pull.base?.ref ?? null,
+      url: pull.html_url,
+      sha: pull.head?.sha ?? null,
+      labels,
+      needsBuild: labels.some((label) => BUILD_LABELS.includes(label.toLowerCase())),
+      package: pull.head?.sha ? await pullRequestPackageInfo(pull.head.sha) : null,
+    };
 
     try {
       sessionStorage.setItem(key, JSON.stringify(info));
@@ -618,6 +640,67 @@ async function pullRequestInfo(number) {
   } catch {
     return null;
   }
+}
+
+/**
+ * The build of a commit of joomla-cms by Joomla's CI: the newest "Download" status of the commit, when it succeeded
+ * and its folder still exists. GitHub keeps the status after the CI has deleted the build (after about two weeks).
+ * The builds can only be downloaded through the CORS proxy: without one, there is none to use.
+ */
+async function pullRequestPackageInfo(sha) {
+  if (!corsProxy) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/joomla/joomla-cms/commits/${sha}/statuses?per_page=100`, { headers: gitHubHeaders() });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    // Newest first: the last word of the CI on this commit.
+    const status = (await response.json()).find((item) => item.context === 'Download');
+
+    if (status?.state !== 'success' || !PACKAGE_FOLDER.test(status.target_url ?? '')) {
+      return null;
+    }
+
+    const details = await fetch(`${corsProxy}?url=${encodeURIComponent(`${status.target_url}/pr_extension.xml`)}`, { method: 'HEAD' });
+
+    return details.ok ? { folder: status.target_url, built: status.created_at } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * How to test a pull request: "package" (Joomla CI's build laid over the site) or "patchtester". ?method= chooses;
+ * by default a pull request that needs a build (by its labels) uses its package, when the CI has one. note says why
+ * a pull request that needs a build is tested with the Patch Tester anyway.
+ *
+ * @returns {{method: string, note: string|null}}
+ */
+function pullRequestMethod(info, requested) {
+  if (requested === 'package' || requested === 'patchtester') {
+    const missing = requested === 'package' && !info?.package;
+
+    return {
+      method: missing ? 'patchtester' : requested,
+      note: missing ? `${NO_PACKAGE}: testing it with the Patch Tester` : null,
+    };
+  }
+
+  if (!info?.needsBuild) {
+    return { method: 'patchtester', note: null };
+  }
+
+  return info.package
+    ? { method: 'package', note: null }
+    : {
+        method: 'patchtester',
+        note: `This pull request needs a build (JavaScript, CSS or Composer). ${NO_PACKAGE}: the Patch Tester applies only its PHP, template and language changes`,
+      };
 }
 
 /**
@@ -671,23 +754,70 @@ function preparePullRequest(number) {
 }
 
 /**
- * Shows the pull request in the toolbar, with a button to apply or revert it.
+ * Shows the pull request in the toolbar, with a button to apply or revert it: with the Patch Tester, or (method
+ * "package") Joomla CI's build of it.
  */
-async function showPullRequest(number, info) {
-  pullRequest = { number, test: await call('pullRequestTest', { pullRequest: number }) };
+async function showPullRequest(number, info, method = 'patchtester') {
+  pullRequest = method === 'package'
+    ? { number, method, package: info.package, applied: (await call('pullRequestPackage', { pullRequest: number })).applied }
+    : { number, method, test: await call('pullRequestTest', { pullRequest: number }) };
   elements.pullRequestLink.textContent = `PR #${number}`;
   elements.pullRequestLink.href = info?.url ?? `https://github.com/joomla/joomla-cms/pull/${number}`;
-  elements.pullRequestLink.title = info ? `${info.title} (${info.branch})` : 'The pull request on GitHub';
+  elements.pullRequestLink.title = info
+    ? `${info.title} (${info.branch})${info.labels?.length ? `\nLabels: ${info.labels.join(', ')}` : ''}`
+    : 'The pull request on GitHub';
   elements.pullRequest.hidden = false;
   renderPullRequest();
   elements.pullRequestToggle.disabled = false;
 }
 
 function renderPullRequest() {
+  if (pullRequest.method === 'package') {
+    const built = new Date(pullRequest.package.built).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+    elements.pullRequestToggle.textContent = pullRequest.applied ? 'Revert build' : 'Apply build';
+    elements.pullRequestToggle.title = pullRequest.applied
+      ? `Put the original files back (changes to the database stay), and show this page again`
+      : `Lay the build of PR #${pullRequest.number} by Joomla's CI (${built}) over the site, with its built JavaScript and CSS, and show this page again`;
+
+    return;
+  }
+
   elements.pullRequestToggle.textContent = pullRequest.test ? 'Revert patch' : 'Apply patch';
   elements.pullRequestToggle.title = pullRequest.test
     ? `Undo the changes of PR #${pullRequest.number}, and show this page again`
     : `Apply the changes of PR #${pullRequest.number} with the Patch Tester, and show this page again`;
+}
+
+/**
+ * Lays Joomla CI's build of the pull request over the site, or takes it off again, then shows the page that was
+ * open again.
+ */
+async function togglePullRequestPackage(page) {
+  const { number, applied } = pullRequest;
+
+  setBusy(true);
+  setLoading(true);
+  setStatus(applied ? `Reverting the build of PR #${number}` : `Applying the build of PR #${number}`);
+
+  try {
+    const result = await call('pullRequestPackage', { pullRequest: number, folder: pullRequest.package.folder, apply: !applied });
+    const changes = result.changes;
+
+    pullRequest.applied = result.applied;
+    renderPullRequest();
+
+    const counts = changes ? `${changes.replaced.length} files changed, ${changes.added.length} added, ${changes.deleted.length} deleted` : '';
+    const database = changes?.sql ? ` · database: ${changes.sql.message}` : '';
+
+    setStatus(`${readyStatus} · build of PR #${number} ${result.applied ? 'applied' : 'reverted'} (${counts})${database}`, Boolean(changes?.sql && !changes.sql.ok));
+    await loadFrame(page);
+  } catch (error) {
+    setStatus(`The build of PR #${number} was not ${applied ? 'reverted' : 'applied'}: ${error.message}`, true);
+  } finally {
+    setLoading(false);
+    setBusy(false);
+  }
 }
 
 function loadFrame(src) {
@@ -716,6 +846,10 @@ async function togglePullRequest() {
 
   if (!page?.startsWith(`${playground.siteUrl}/`) || page.includes('option=com_patchtester')) {
     page = `${playground.siteUrl}/administrator/`;
+  }
+
+  if (pullRequest.method === 'package') {
+    return togglePullRequestPackage(page);
   }
 
   setBusy(true);
@@ -896,7 +1030,10 @@ async function start() {
   addEventListener('pagehide', flush);
 
   const site = url.searchParams.get('site');
-  const blueprint = await blueprintFromUrl(url);
+  // A pull request: its labels and Joomla CI's build decide how it is tested, and so which blueprint it gets.
+  const info = hasPr ? await pullRequestInfo(Number(prParam)) : null;
+  const { method, note: methodNote } = hasPr ? pullRequestMethod(info, url.searchParams.get('method')) : { method: 'patchtester', note: null };
+  const blueprint = await blueprintFromUrl(url, { pullRequestMethod: method });
   const prebuilt = site ? null : await prebuiltDemo(blueprint, url);
 
   if (prebuilt) {
@@ -915,7 +1052,6 @@ async function start() {
   }
 
   // A pull request picks the Joomla version of its branch, unless the link names one.
-  const info = blueprint?.pullRequest ? await pullRequestInfo(blueprint.pullRequest) : null;
   const branch = info && !site && !url.searchParams.has('joomla') ? joomlaForBranch(info.branch) : null;
 
   if (branch) {
@@ -927,11 +1063,13 @@ async function start() {
   await boot({ ...(site ? { site } : {}), joomla, php: blueprint?.preferredVersions?.php ?? null, blueprint });
 
   if (blueprint?.pullRequest) {
-    await showPullRequest(blueprint.pullRequest, info);
+    await showPullRequest(blueprint.pullRequest, info, method);
   }
 
-  if (warning ?? branch?.note) {
-    setStatus(warning ?? branch.note, true);
+  const notes = [warning ?? branch?.note, methodNote].filter(Boolean);
+
+  if (notes.length) {
+    setStatus(notes.join(' · '), true);
   }
 
   // A saved site remembers its PHP version: its address needs no ?php any more.
