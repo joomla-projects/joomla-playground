@@ -846,6 +846,10 @@ describe('Blueprints', () => {
       assert.ok(forkLinks.includes('https://playground.joomengine.org/'));
       assert.equal(forkLinks.filter((link) => link.startsWith(`${fork}?blueprint=component-tutorial-step`)).length, 19);
       assert.ok(forkLinks.some((link) => link.endsWith('#an-ai-assistant-in-the-playground-mcp')));
+      assert.ok(forkLinks.includes('https://www.npmjs.com/package/@hermanpeeren/joomla-playground-mcp'));
+
+      // The fork's section comes last, after "More".
+      assert.equal(await tab.locator('main > section:last-of-type').getAttribute('id'), 'fork');
 
       // The tours, from their list: one link per tutorial, to a blueprint the playground serves.
       await tab.waitForSelector('#home-tours-list a', { timeout: 30000 });
