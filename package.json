@@ -21,11 +21,11 @@
     "demos": "node scripts/build-demos.mjs"
   },
   "devDependencies": {
-    "@php-wasm/fs-journal": "3.1.63",
-    "@php-wasm/node": "3.1.63",
-    "@php-wasm/util": "3.1.63",
-    "@php-wasm/universal": "3.1.63",
-    "@php-wasm/web": "3.1.63",
+    "@php-wasm/fs-journal": "3.1.65",
+    "@php-wasm/node": "3.1.65",
+    "@php-wasm/util": "3.1.65",
+    "@php-wasm/universal": "3.1.65",
+    "@php-wasm/web": "3.1.65",
     "marked": "18.1.1",
     "playwright-core": "1.64.1",
     "vite": "6.4.5"
