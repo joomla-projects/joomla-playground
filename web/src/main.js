@@ -813,12 +813,18 @@ async function start() {
     throw new Error('This browser does not support service workers (they need HTTPS or localhost).');
   }
 
-  // Reserve the pull request controls in the toolbar up front so unhiding them after boot does not shift the layout.
+  // Reserve the pull request / Patch Tester controls in the toolbar up front so unhiding them after boot does not shift the layout.
   const url = new URL(location.href);
   const prParam = url.searchParams.get('pr');
+  const hasPr = Boolean(prParam && /^[1-9][0-9]*$/.test(prParam));
 
-  if (prParam && /^[1-9][0-9]*$/.test(prParam)) {
+  if (hasPr) {
     preparePullRequest(Number(prParam));
+  }
+
+  if (hasPr || url.searchParams.get('blueprint') === 'patchtester') {
+    elements.gitHubToken.hidden = false;
+    elements.gitHubToken.disabled = true;
   }
 
   // Not awaited: the service worker and PHP worker load in parallel with versions.json and any blueprint.
