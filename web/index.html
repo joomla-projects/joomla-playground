@@ -106,7 +106,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px 12px;
+      gap: 6px 8px;
     }
 
     .statusbar {
@@ -135,7 +135,7 @@
 
     header button {
       min-block-size: 26px;
-      padding: 4px 12px;
+      padding: 4px 10px;
       border: 1px solid var(--muted);
       border-radius: 4px;
       background: transparent;
@@ -171,7 +171,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px 12px;
+      gap: 6px 10px;
       margin-inline-start: auto;
     }
 
@@ -185,7 +185,7 @@
       font: inherit;
     }
 
-    #joomla-version { inline-size: 5.5rem; }
+    #joomla-version { inline-size: 6rem; }
     #php-version { inline-size: 4rem; }
 
     .credentials {
@@ -206,7 +206,7 @@
 
     #info {
       display: inline-block;
-      min-inline-size: min(28ch, calc(100dvw - 32px));
+      min-inline-size: min(36ch, calc(100dvw - 32px));
       min-block-size: 1lh;
       white-space: nowrap;
     }
@@ -225,7 +225,7 @@
 
     #sites-menu summary {
       min-block-size: 26px;
-      padding: 4px 12px;
+      padding: 4px 10px;
       border: 1px solid var(--muted);
       border-radius: 4px;
       cursor: pointer;
@@ -243,7 +243,7 @@
       z-index: 10;
       inset-block-start: calc(100% + 6px);
       inset-inline-start: 0;
-      min-inline-size: 320px;
+      min-inline-size: min(320px, calc(100dvw - 32px));
       max-inline-size: calc(100dvw - 32px);
       margin: 0;
       padding: 6px 0;
@@ -465,7 +465,7 @@
         <a id="pull-request-link" target="_blank" rel="noopener"></a>
         <button id="pull-request-toggle" type="button" disabled></button>
       </span>
-      <button id="github-token" type="button" hidden title="The GitHub token the Patch Tester uses: remembered in this browser for every new playground">GitHub token…</button>
+      <button id="github-token" type="button" disabled hidden title="The GitHub token the Patch Tester uses: remembered in this browser for every new playground">GitHub token…</button>
       <span class="versions">
         <label class="version" for="joomla-version">Joomla <select id="joomla-version" disabled title="Joomla version"></select></label>
         <label class="version" for="php-version">PHP <select id="php-version" disabled title="PHP version (WebAssembly)"></select></label>

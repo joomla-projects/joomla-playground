@@ -34,15 +34,20 @@ async function renderVersions() {
     const others = bundles.versions.filter((bundle) => bundle.joomla !== bundles.default);
 
     document.querySelector('#home-default-version').textContent = `Joomla ${bundles.default}`;
-    document.querySelector('#home-versions').replaceChildren(
-      ...others.flatMap((bundle, index) => [
-        index ? ' · ' : '',
-        element('a', { href: playgroundLink({ joomla: bundle.branch ?? bundle.joomla.split('.').slice(0, 2).join('.') }) },
-          bundle.branch ? `Joomla ${bundle.branch}` : `Joomla ${bundle.joomla}`),
-        bundle.branch ? ` (a nightly build${bundle === others.find((candidate) => candidate.branch) ? ', the development branch' : ''})` : '',
-      ])
-    );
-    document.querySelector('#home-other-versions').hidden = !others.length;
+    if (others.length) {
+      document.querySelector('#home-versions').replaceChildren(
+        'Or start ',
+        ...others.flatMap((bundle, index) => [
+          index ? ' · ' : '',
+          element('a', { href: playgroundLink({ joomla: bundle.branch ?? bundle.joomla.split('.').slice(0, 2).join('.') }) },
+            bundle.branch ? `Joomla ${bundle.branch}` : `Joomla ${bundle.joomla}`),
+          bundle.branch ? ` (a nightly build${bundle === others.find((candidate) => candidate.branch) ? ', the development branch' : ''})` : '',
+        ]),
+        '.'
+      );
+    } else {
+      document.querySelector('#home-other-versions').hidden = true;
+    }
   } catch {
     // Without the list the page still works: the main button starts the default version.
   }
