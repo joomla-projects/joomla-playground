@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="text-scale" content="scale">
   <title>Joomla Playground: overview</title>
   <meta name="description" content="A complete Joomla site in your browser tab: no server, no installation, no account. Demos, guided tours of the Joomla User Guide, and testing pull requests.">
   <link rel="icon" type="image/svg+xml" href="../joomla/joomla-favicon.svg">
@@ -37,11 +39,36 @@
 
     * { box-sizing: border-box; }
 
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute !important;
+      clip-path: inset(50%) !important;
+      overflow: hidden !important;
+      inline-size: 1px !important;
+      block-size: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
+    }
+
+    .skip-link:focus-visible {
+      position: fixed;
+      inset-block-start: 12px;
+      inset-inline-start: 12px;
+      z-index: 100;
+      padding: 8px 14px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
     body {
       margin: 0;
       background: var(--page);
       color: var(--text);
-      font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+      font: 1rem/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
     a { color: var(--link); }
@@ -77,7 +104,7 @@
       max-inline-size: 44em;
       margin: 0 0 24px;
       color: var(--navy-muted);
-      font-size: 18px;
+      font-size: 1.125rem;
     }
 
     .hero a { color: var(--navy-text); }
@@ -88,10 +115,11 @@
       gap: 2px;
       min-inline-size: min(27rem, 100%);
       padding: 14px 28px;
+      border: 1px solid transparent;
       border-radius: 8px;
       background: var(--accent);
       color: var(--accent-text) !important;
-      font-size: 20px;
+      font-size: 1.25rem;
       font-weight: 700;
       text-decoration: none;
     }
@@ -99,7 +127,7 @@
     .start:hover, .start:focus-visible { filter: brightness(1.08); }
 
     .start small {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 500;
     }
 
@@ -107,7 +135,7 @@
       max-inline-size: none;
       margin: 16px 0 0;
       min-block-size: 1.5lh;
-      font-size: 15px;
+      font-size: 0.9375rem;
     }
 
     main { padding: 40px 0 24px; }
@@ -116,7 +144,7 @@
 
     h2 {
       margin: 0 0 4px;
-      font-size: 24px;
+      font-size: 1.5rem;
     }
 
     h2 + p { margin-top: 0; }
@@ -140,7 +168,7 @@
 
     .card h3 {
       margin: 0;
-      font-size: 18px;
+      font-size: 1.125rem;
     }
 
     .card p { margin: 0; }
@@ -157,7 +185,7 @@
       border-radius: 999px;
       background: var(--accent);
       color: var(--accent-text);
-      font-size: 13px;
+      font-size: 0.8125rem;
       font-weight: 600;
       vertical-align: middle;
     }
@@ -180,7 +208,7 @@
       padding: 2px 6px;
       border: 1px solid var(--line);
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 0.875rem;
       text-decoration: none;
     }
 
@@ -206,7 +234,7 @@
       gap: 4px;
       min-inline-size: 0;
       max-inline-size: 100%;
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--muted);
     }
 
@@ -251,7 +279,7 @@
       padding: 1px 5px;
       border-radius: 4px;
       background: var(--line);
-      font-size: 14px;
+      font-size: 0.875rem;
     }
 
     nav.sections {
@@ -259,10 +287,10 @@
       flex-wrap: wrap;
       gap: 6px 20px;
       margin: 0 0 32px;
-      font-size: 15px;
+      font-size: 0.9375rem;
     }
 
-    h3 { margin: 24px 0 4px; font-size: 18px; }
+    h3 { margin: 24px 0 4px; font-size: 1.125rem; }
 
     .table {
       overflow-x: auto;
@@ -272,7 +300,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 15px;
+      font-size: 0.9375rem;
     }
 
     th, td {
@@ -282,7 +310,7 @@
       vertical-align: top;
     }
 
-    th { font-size: 14px; color: var(--muted); font-weight: 600; }
+    th { font-size: 0.875rem; color: var(--muted); font-weight: 600; }
     td code { white-space: nowrap; }
 
     details {
@@ -301,7 +329,7 @@
       padding: 12px;
       border-radius: 6px;
       background: var(--line);
-      font-size: 14px;
+      font-size: 0.875rem;
     }
 
     pre code { padding: 0; background: none; }
@@ -312,11 +340,28 @@
     footer {
       padding: 24px 0 40px;
       border-top: 1px solid var(--line);
-      font-size: 14px;
+      font-size: 0.875rem;
+    }
+
+    @media (pointer: coarse) {
+      .steps a {
+        min-inline-size: 44px;
+        min-block-size: 44px;
+      }
+
+      button,
+      input,
+      select,
+      nav.sections a {
+        min-block-size: 44px;
+        display: inline-flex;
+        align-items: center;
+      }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link visually-hidden" href="#main-content">Skip to main content</a>
   <header class="hero">
     <div class="wrap">
       <h1>Joomla Playground</h1>
@@ -328,7 +373,7 @@
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="main-content" tabindex="-1">
     <nav class="sections" aria-label="On this page">
       <a href="#demos">Demos</a>
       <a href="#pull-requests">Test a pull request</a>
@@ -426,6 +471,7 @@
       <h3>The toolbar</h3>
       <div class="table">
         <table>
+          <caption class="visually-hidden">Toolbar buttons and their actions</caption>
           <thead><tr><th scope="col">Button</th><th scope="col">What it does</th></tr></thead>
           <tbody>
             <tr><td><strong>Site</strong> / <strong>Administrator</strong></td><td>Show the front end or the administrator of the site.</td></tr>
@@ -502,6 +548,7 @@
         <summary>All parameters</summary>
         <div class="table">
           <table>
+            <caption class="visually-hidden">URL parameters supported by Joomla Playground</caption>
             <thead><tr><th scope="col">Parameter</th><th scope="col">Example</th><th scope="col">What it does</th></tr></thead>
             <tbody>
               <tr><td><code>joomla</code></td><td><code>?joomla=5.4</code></td><td>Joomla version; <code>5</code> also works. <code>?joomla=dev</code> is the development branch; a branch such as <code>?joomla=6.2-dev</code> is its nightly build, and <code>?joomla=6.2</code> the release</td></tr>
@@ -535,6 +582,7 @@
 }</code></pre>
         <div class="table">
           <table>
+            <caption class="visually-hidden">Blueprint steps and their properties</caption>
             <thead><tr><th scope="col">Step</th><th scope="col">Properties</th><th scope="col">What it does</th></tr></thead>
             <tbody>
               <tr><td><code>installExtension</code></td><td><code>url</code></td><td>Install an extension package (zip)</td></tr>
@@ -647,24 +695,24 @@
             Read a step in the manual, then try its code here. From step 4 on, the component's table has two
             landmarks.</p>
           <ul class="steps" aria-label="Steps">
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step01" title="Step 1: Basic Component">1</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step02" title="Step 2: Defining a Menuitem">2</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step03" title="Step 3: Adding the Model">3</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step04" title="Step 4: Using the Database">4</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step05" title="Step 5: Setting the Browser Title">5</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step06" title="Step 6: Administrator List">6</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step07" title="Step 7: Administrator Edit">7</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step08" title="Step 8: Using Higher-level MVC Classes">8</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step09" title="Step 9: Adding a Record">9</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step10" title="Step 10: Deleting Records">10</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step11" title="Step 11: Publishing">11</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step12" title="Step 12: Filtering, Pagination and Column Ordering">12</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step13" title="Step 13: Toolbars">13</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step14" title="Step 14: Image">14</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step15" title="Step 15: JavaScript Map">15</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step16" title="Step 16: Config and Install Script">16</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step17" title="Step 17: Validation">17</a></li>
-            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step18" title="Step 18: Custom Server-side Validation">18</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step01" title="Step 1: Basic Component" aria-label="Step 1: Basic Component">1</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step02" title="Step 2: Defining a Menuitem" aria-label="Step 2: Defining a Menuitem">2</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step03" title="Step 3: Adding the Model" aria-label="Step 3: Adding the Model">3</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step04" title="Step 4: Using the Database" aria-label="Step 4: Using the Database">4</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step05" title="Step 5: Setting the Browser Title" aria-label="Step 5: Setting the Browser Title">5</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step06" title="Step 6: Administrator List" aria-label="Step 6: Administrator List">6</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step07" title="Step 7: Administrator Edit" aria-label="Step 7: Administrator Edit">7</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step08" title="Step 8: Using Higher-level MVC Classes" aria-label="Step 8: Using Higher-level MVC Classes">8</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step09" title="Step 9: Adding a Record" aria-label="Step 9: Adding a Record">9</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step10" title="Step 10: Deleting Records" aria-label="Step 10: Deleting Records">10</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step11" title="Step 11: Publishing" aria-label="Step 11: Publishing">11</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step12" title="Step 12: Filtering, Pagination and Column Ordering" aria-label="Step 12: Filtering, Pagination and Column Ordering">12</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step13" title="Step 13: Toolbars" aria-label="Step 13: Toolbars">13</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step14" title="Step 14: Image" aria-label="Step 14: Image">14</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step15" title="Step 15: JavaScript Map" aria-label="Step 15: JavaScript Map">15</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step16" title="Step 16: Config and Install Script" aria-label="Step 16: Config and Install Script">16</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step17" title="Step 17: Validation" aria-label="Step 17: Validation">17</a></li>
+            <li><a href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step18" title="Step 18: Custom Server-side Validation" aria-label="Step 18: Custom Server-side Validation">18</a></li>
           </ul>
           <a class="open" href="https://hermanpeeren.github.io/joomla-playground-extensions/?blueprint=component-tutorial-step01">Open step 1: Basic Component</a>
         </article>

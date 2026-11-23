@@ -95,6 +95,7 @@ function setUpPullRequestForm() {
     const page = form.elements.url.value.trim();
 
     if (!number) {
+      form.elements.pr.setAttribute('aria-invalid', 'true');
       form.elements.pr.setCustomValidity('A pull request number, or its address on GitHub');
       form.reportValidity();
 
@@ -103,7 +104,10 @@ function setUpPullRequestForm() {
 
     location.href = playgroundLink({ pr: number, ...(page ? { url: page.startsWith('/') ? page : `/${page}` } : {}) });
   });
-  form.elements.pr.addEventListener('input', () => form.elements.pr.setCustomValidity(''));
+  form.elements.pr.addEventListener('input', () => {
+    form.elements.pr.removeAttribute('aria-invalid');
+    form.elements.pr.setCustomValidity('');
+  });
 }
 
 /** Language tags and how the list of tours names them. */
@@ -119,6 +123,10 @@ const TOUR_LANGUAGES = {
   'pt-br': 'Português do Brasil',
   ru: 'Русский',
 };
+
+const TOUR_LANGUAGE_TAGS = Object.fromEntries(
+  Object.entries(TOUR_LANGUAGES).map(([tag, name]) => [name, tag === 'pt-br' ? 'pt-BR' : tag])
+);
 
 /**
  * The guided tours, from their list (blueprints/tours/README.md): per section a table with a row per language.
@@ -173,6 +181,8 @@ async function renderTours() {
   select.value = preferred ?? tours.languages[0];
 
   const render = () => {
+    const lang = TOUR_LANGUAGE_TAGS[select.value];
+
     list.replaceChildren(
       ...tours.sections
         .filter((section) => section.tours.has(select.value))
@@ -180,7 +190,7 @@ async function renderTours() {
           const tour = section.tours.get(select.value);
 
           return element('li', {},
-            element('a', { href: tour.href, dir: 'auto' }, tour.title),
+            element('a', { href: tour.href, dir: 'auto', ...(lang ? { lang } : {}) }, tour.title),
             element('span', { class: 'muted' }, ` ${section.title.match(/^[\d.]+/)?.[0] ?? ''}`)
           );
         })

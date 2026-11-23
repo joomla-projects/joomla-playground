@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="text-scale" content="scale">
   <title>Joomla Playground</title>
   <script>
     // The address without parameters is the overview of the playground (overview/). A playground needs a parameter:
@@ -33,7 +35,7 @@
       --selected: #e8f0fb;
       --loading: #f2f5fa;
       --loading-text: #1c2b4a;
-      color-scheme: light;
+      color-scheme: light dark;
     }
 
     /* Dark mode follows the browser, as Joomla's administrator does (the site's front end, Cassiopeia, has none). */
@@ -51,11 +53,22 @@
         --selected: #263552;
         --loading: #0f151d;
         --loading-text: #e6ebf4;
-        color-scheme: dark;
       }
     }
 
     * { box-sizing: border-box; }
+
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute !important;
+      clip-path: inset(50%) !important;
+      overflow: hidden !important;
+      inline-size: 1px !important;
+      block-size: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
+    }
 
     html, body {
       block-size: 100%;
@@ -77,7 +90,7 @@
       padding: 8px 16px;
       background: var(--bar);
       color: var(--bar-text);
-      font-size: 14px;
+      font-size: 0.875rem;
     }
 
     header :where(a:any-link, button, select, summary):focus-visible {
@@ -103,13 +116,13 @@
       gap: 4px 16px;
       padding-block-start: 6px;
       border-block-start: 1px solid rgba(185, 196, 216, 0.2);
-      font-size: 13px;
+      font-size: 0.8125rem;
       line-height: 1.4;
     }
 
     header h1 {
       margin: 0;
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: 600;
     }
 
@@ -163,7 +176,7 @@
     }
 
     .version select {
-      block-size: 26px;
+      min-block-size: 26px;
       padding: 2px 4px;
       border: 1px solid var(--muted);
       border-radius: 4px;
@@ -220,7 +233,10 @@
     }
 
     #sites-menu summary::-webkit-details-marker { display: none; }
-    #sites-menu summary::after { content: " ▾"; }
+    #sites-menu summary::after {
+      content: " ▾";
+      content: " ▾" / "";
+    }
 
     #sites-list {
       position: absolute;
@@ -234,6 +250,7 @@
       list-style: none;
       background: var(--page);
       color: var(--text);
+      border: 1px solid var(--line);
       border-radius: 6px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
     }
@@ -247,11 +264,12 @@
 
     #sites-list li.empty { display: block; color: var(--text-muted); }
     #sites-list a { color: var(--link); font-weight: 600; }
-    #sites-list .details { grid-column: 1; font-size: 12px; color: var(--text-muted); }
+    #sites-list .details { grid-column: 1; font-size: 0.75rem; color: var(--text-muted); }
     #sites-list .actions { grid-row: 1 / span 2; grid-column: 2; align-self: center; display: flex; gap: 6px; }
     #sites-list button { color: var(--link); border-color: var(--link-border); }
     #sites-list button.delete { color: var(--danger); border-color: var(--danger-border); }
 
+    #mail-count:empty { display: none; }
     #mail-count:not(:empty) {
       margin-inline-start: 4px;
       padding: 0 6px;
@@ -265,7 +283,7 @@
       inline-size: min(1000px, calc(100% - 32px));
       block-size: min(700px, calc(100dvh - 64px));
       padding: 0;
-      border: 0;
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
       color: var(--text);
@@ -287,17 +305,36 @@
       border-inline-end: 1px solid var(--line);
     }
 
-    #mail-list li { padding: 8px 12px; border-block-end: 1px solid var(--line-light); cursor: pointer; }
-    #mail-list li.selected { background: var(--selected); }
-    #mail-list li.empty { color: var(--text-muted); cursor: default; }
+    #mail-list li { border-block-end: 1px solid var(--line-light); }
+    #mail-list li.empty { padding: 8px 12px; color: var(--text-muted); }
+    #mail-list button {
+      display: block;
+      inline-size: 100%;
+      padding: 8px 12px;
+      border: 0;
+      border-inline-start: 3px solid transparent;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: start;
+      cursor: pointer;
+    }
+    #mail-list button[aria-current="true"] {
+      background: var(--selected);
+      border-inline-start-color: var(--link);
+    }
+    #mail-list button:focus-visible {
+      outline: 2px solid var(--link);
+      outline-offset: -2px;
+    }
     #mail-list .subject { font-weight: 600; }
-    #mail-list .meta { font-size: 12px; color: var(--text-muted); }
+    #mail-list .meta { font-size: 0.75rem; color: var(--text-muted); }
 
     #mail-view { display: grid; grid-template-rows: auto 1fr; min-block-size: 0; }
-    #mail-headers { margin: 0; padding: 8px 12px; font-size: 13px; border-block-end: 1px solid var(--line-light); }
+    #mail-headers { margin: 0; padding: 8px 12px; font-size: 0.8125rem; border-block-end: 1px solid var(--line-light); }
     #mail-headers dt { float: inline-start; clear: inline-start; inline-size: 64px; color: var(--text-muted); }
     #mail-headers dd { margin-inline-start: 72px; }
-    #mail-text { margin: 0; padding: 12px; overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; font: 13px ui-monospace, Consolas, monospace; }
+    #mail-text { margin: 0; padding: 12px; overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; font: 0.8125rem ui-monospace, Consolas, monospace; }
     #mail-html { display: block; inline-size: 100%; block-size: 100%; border: 0; }
 
     @media (max-width: 640px) {
@@ -308,7 +345,7 @@
     #token-dialog {
       inline-size: min(560px, calc(100% - 32px));
       padding: 0;
-      border: 0;
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
       color: var(--text);
@@ -320,7 +357,7 @@
     #token-dialog .body { display: grid; gap: 12px; padding: 16px; }
     #token-dialog p { margin: 0; line-height: 1.5; }
     #token-dialog a { color: var(--link); }
-    #token-dialog input { inline-size: 100%; padding: 6px 8px; font: 13px ui-monospace, Consolas, monospace; }
+    #token-dialog input { inline-size: 100%; padding: 6px 8px; font: 0.8125rem ui-monospace, Consolas, monospace; }
     #token-dialog :where(a:any-link, input, .actions button):focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
     #token-dialog .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
@@ -337,8 +374,19 @@
 
     #token-dialog .actions button:disabled { opacity: 0.4; cursor: default; }
     #token-dialog #token-forget { color: var(--danger); border-color: var(--danger-border); }
-    #token-state { color: var(--text-muted); font-size: 13px; }
-    #token-error { color: var(--danger); font-size: 13px; }
+    #token-state { color: var(--text-muted); font-size: 0.8125rem; }
+    #token-error { color: var(--danger); font-size: 0.8125rem; }
+
+    @media (pointer: coarse) {
+      header button,
+      #sites-menu summary,
+      .version select,
+      #sites-list button,
+      #token-dialog .actions button,
+      #mail-list button {
+        min-block-size: 44px;
+      }
+    }
 
     #stage {
       position: relative;
@@ -367,7 +415,7 @@
       gap: 24px;
       background: var(--loading);
       color: var(--loading-text);
-      font-size: 16px;
+      font-size: 1rem;
     }
 
     /* Reserve the loader's size before the custom element upgrades, preventing CLS. */
@@ -397,7 +445,7 @@
 <body>
   <header>
     <div class="toolbar">
-      <h1><a href="overview/" target="_blank" title="Overview: demos, guided tours, testing pull requests (opens in a new tab)">Joomla Playground</a></h1>
+      <h1><a href="overview/" target="_blank" rel="noopener" title="Overview: demos, guided tours, testing pull requests (opens in a new tab)">Joomla Playground<span class="visually-hidden"> (opens in a new tab)</span></a></h1>
       <button id="open-site" type="button" disabled>Site</button>
       <button id="open-admin" type="button" disabled>Administrator</button>
       <span class="separator" aria-hidden="true"></span>
@@ -411,7 +459,7 @@
         <summary>My sites</summary>
         <ul id="sites-list"></ul>
       </details>
-      <button id="mail" type="button" disabled title="The mails this site sent: they are caught, not delivered">Mail<span id="mail-count"></span></button>
+      <button id="mail" type="button" disabled title="The mails this site sent: they are caught, not delivered">Mail <span id="mail-count"></span></button>
       <span id="pull-request" hidden>
         <span class="separator" aria-hidden="true"></span>
         <a id="pull-request-link" target="_blank" rel="noopener"></a>
@@ -424,14 +472,14 @@
       </span>
     </div>
     <div class="statusbar">
-      <span id="status">Loading</span>
+      <span id="status" role="status" aria-live="polite" aria-atomic="true">Loading</span>
       <span class="credentials"><span id="credentials-label">Super User:</span> <span id="credentials">…</span></span>
       <span id="info"></span>
     </div>
   </header>
   <main id="stage">
     <iframe id="joomla" title="Joomla"></iframe>
-    <div id="loading" role="status">
+    <div id="loading">
       <joomla-core-loader inline size="160" color="transparent" aria-hidden="true"></joomla-core-loader>
       <p id="loading-status">Loading</p>
     </div>
@@ -468,7 +516,7 @@
         higher rate limit.
       </p>
       <label for="token-input">Token</label>
-      <input id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-describedby="token-state token-error">
       <span id="token-state"></span>
       <span id="token-error" role="alert"></span>
       <div class="actions">
