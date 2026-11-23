@@ -19,6 +19,7 @@ import { hasBase, readBase, readMeta, readSnapshot, siteLockName, writeBase, wri
 import { DEFAULT_PHP_VERSION } from './blueprint.js';
 import { BlueprintError, joomlaPhp, runSteps } from './blueprint-steps.js';
 import { createSiteApi } from './site-api.js';
+import { memoryZip, openRemoteZip } from './zip-ranges.js';
 
 const DOCUMENT_ROOT = '/var/www/html';
 const CA_BUNDLE = '/internal/shared/ca-bundle.crt';
@@ -674,13 +675,31 @@ const PACKAGE_FOLDER = /^https:\/\/artifacts\.joomla\.org\/drone\/joomla\/joomla
 /** The originals of the files a pull request's package replaced or deleted, and the list of its changes. */
 const PACKAGE_BACKUPS = 'data/pull-requests';
 
+/** Up to this many files that differ, they are read from the package with Range requests; above it, it is downloaded. */
+const PACKAGE_RANGES_UP_TO = 400;
+
+/**
+ * Files of a package that stay as they are: what the bundle leaves out or changes on purpose (see
+ * bin/build-browser-bundle.php), and what is no part of a site's code (images/ is the site's own).
+ */
+function skippedInPackage(name) {
+  return name.endsWith('/')
+    || name.startsWith('installation/')
+    || name.startsWith('images/')
+    || /^(tmp|cache|administrator\/cache|administrator\/logs)\//.test(name)
+    || /^media\/.*\.(gz|scss|less|ts|map)$/.test(name)
+    || name === 'plugins/system/webauthn/fido.jwt'
+    || name === 'configuration.php';
+}
+
 /**
  * A pull request's build from Joomla's CI (its Full Package on artifacts.joomla.org), laid over the site, or taken
  * off again. For pull requests the Patch Tester cannot test: changed JavaScript, CSS or Vue sources that need
  * building ("NPM Resource Changed"), or changed Composer dependencies.
  *
- * - apply: true   downloads the package, compares every file with the package the bundle was made from (its
- *                 package index, see bin/build-browser-bundle.php) and writes the ones that differ, deletes the ones
+ * - apply: true   reads the list of files at the end of the package (Range requests, see zip-ranges.js), compares
+ *                 every file with the package the bundle was made from (its package index, see
+ *                 bin/build-browser-bundle.php), reads and writes the ones that differ, deletes the ones
  *                 the pull request removed, and keeps the originals in data/pull-requests/<number>/. Then it clears
  *                 the caches, refreshes Joomla's media version and, when the pull request has database changes,
  *                 runs Joomla's update queries.
@@ -740,39 +759,60 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
     // not one the pull request deleted. The Full Package beside it has all files.
     const fullPackage = url.replace(/-Update_Package\.zip$/, '-Full_Package.zip');
 
-    const [index, bytes] = await Promise.all([
-      fetch(new URL(state.manifest.packageIndex, state.bundleUrl)).then((response) => {
-        if (!response.ok) {
-          throw new Error(`Cannot read the bundle's package index: HTTP ${response.status}`);
-        }
+    if (!state.corsProxy) {
+      throw new Error(`Joomla's CI does not allow downloads from other sites (CORS), and this playground has no CORS proxy`);
+    }
 
-        return response.text();
-      }),
-      downloadAllowingProxy(fullPackage, `the build of PR #${number}`),
-    ]);
+    const index = await fetch(new URL(state.manifest.packageIndex, state.bundleUrl)).then((response) => {
+      if (!response.ok) {
+        throw new Error(`Cannot read the bundle's package index: HTTP ${response.status}`);
+      }
+
+      return response.json();
+    });
+
+    // Only the list at the end of the package (about 1 MB) and the files that differ, with Range requests; the whole
+    // package (35 MB) when the server or the proxy sends it all, or when much has changed.
+    const proxied = `${state.corsProxy}?url=${encodeURIComponent(fullPackage)}`;
+    let zip = await openRemoteZip(proxied);
+    const inPackage = zip.entries.filter((entry) => !skippedInPackage(entry.name));
+    const changed = inPackage.filter((entry) => {
+      const known = index[entry.name];
+
+      return !known || known[0] !== entry.crc || known[1] !== entry.size;
+    });
+
+    if (!zip.whole && changed.length > PACKAGE_RANGES_UP_TO) {
+      progress(`PR #${number}: downloading its build (${changed.length} files differ)`);
+      zip = await memoryZip(await downloadAllowingProxy(fullPackage, `the build of PR #${number}`));
+    } else {
+      progress(`PR #${number}: reading the ${changed.length} files of its build that differ`);
+    }
+
+    // The same file either way, so the entries (and their offsets) are the same.
+    const contents = await zip.read(changed);
+    const names = new Set(inPackage.map((entry) => entry.name));
+    const deleted = Object.keys(index).filter((name) => !names.has(name) && !skippedInPackage(name));
 
     progress(`PR #${number}: laying its build over the site`);
     const result = await serialized(async () => {
-      state.php.writeFile('/tmp/pr-package.zip', bytes);
-      state.php.writeFile('/tmp/pr-index.json', index);
-      state.php.writeFile('/tmp/pr-details.json', JSON.stringify({ pullRequest: number, folder, package: fullPackage, version, applied: new Date().toISOString() }));
+      for (const [name, bytes] of contents) {
+        state.php.mkdir(`/tmp/pr-files/${name.slice(0, name.lastIndexOf('/'))}`);
+        state.php.writeFile(`/tmp/pr-files/${name}`, bytes);
+      }
+
+      state.php.writeFile('/tmp/pr-details.json', JSON.stringify({
+        details: { pullRequest: number, folder, package: fullPackage, version, applied: new Date().toISOString(), downloaded: zip.requested?.() ?? zip.size },
+        changed: [...contents.keys()],
+        deleted,
+      }));
 
       try {
         const response = await runPhp(state.php, `
           $root    = '${DOCUMENT_ROOT}';
           $backup  = ${JSON.stringify(backup)};
-          $index   = json_decode(file_get_contents('/tmp/pr-index.json'), true);
-          $changes = json_decode(file_get_contents('/tmp/pr-details.json'), true) + ['added' => [], 'replaced' => [], 'deleted' => []];
-
-          // What the bundle leaves out or changes on purpose (see bin/build-browser-bundle.php), and what is no part of
-          // a site's code (images/ is the site's own): those stay as they are.
-          $skip = static fn (string $name): bool => str_ends_with($name, '/')
-              || str_starts_with($name, 'installation/')
-              || str_starts_with($name, 'images/')
-              || preg_match('#^(tmp|cache|administrator/cache|administrator/logs)/#', $name)
-              || preg_match('#^media/.*\\.(gz|scss|less|ts|map)$#', $name)
-              || $name === 'plugins/system/webauthn/fido.jwt'
-              || $name === 'configuration.php';
+          $input   = json_decode(file_get_contents('/tmp/pr-details.json'), true);
+          $changes = $input['details'] + ['added' => [], 'replaced' => [], 'deleted' => []];
 
           $keep = static function (string $name) use ($root, $backup): void {
               $target = $backup . '/original/' . $name;
@@ -780,29 +820,9 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
               copy($root . '/' . $name, $target);
           };
 
-          $zip = new ZipArchive();
-          if ($zip->open('/tmp/pr-package.zip') !== true) {
-              throw new RuntimeException('Cannot open the package of the pull request');
-          }
-
           is_dir($backup) || mkdir($backup, 0777, true);
-          $inPackage = [];
 
-          for ($entry = 0; $entry < $zip->numFiles; $entry++) {
-              $stat = $zip->statIndex($entry);
-              $name = $stat['name'];
-
-              if ($skip($name)) {
-                  continue;
-              }
-
-              $inPackage[$name] = true;
-              $known = $index[$name] ?? null;
-
-              if ($known && $known[0] === sprintf('%08x', $stat['crc']) && $known[1] === $stat['size']) {
-                  continue;
-              }
-
+          foreach ($input['changed'] as $name) {
               $target = $root . '/' . $name;
 
               if (is_file($target)) {
@@ -814,15 +834,11 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
 
               is_dir(dirname($target)) || mkdir(dirname($target), 0777, true);
               is_file($target) && chmod($target, 0666);
-              file_put_contents($target, $zip->getFromIndex($entry));
+              copy('/tmp/pr-files/' . $name, $target);
           }
 
-          $zip->close();
-
-          foreach (array_keys($index) as $name) {
-              $name = (string) $name;
-
-              if (!isset($inPackage[$name]) && !$skip($name) && is_file($root . '/' . $name)) {
+          foreach ($input['deleted'] as $name) {
+              if (is_file($root . '/' . $name)) {
                   $keep($name);
                   chmod($root . '/' . $name, 0666);
                   unlink($root . '/' . $name);
@@ -836,9 +852,8 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
 
         return JSON.parse(response.text);
       } finally {
-        for (const file of ['/tmp/pr-package.zip', '/tmp/pr-index.json', '/tmp/pr-details.json']) {
-          state.php.fileExists(file) && state.php.unlink(file);
-        }
+        state.php.fileExists('/tmp/pr-details.json') && state.php.unlink('/tmp/pr-details.json');
+        state.php.isDir('/tmp/pr-files') && state.php.rmdir('/tmp/pr-files', { recursive: true });
       }
     });
 

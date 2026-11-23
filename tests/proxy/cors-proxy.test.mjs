@@ -60,6 +60,27 @@ describe('CORS proxy', () => {
     assert.equal(await response.text(), '<updates>longer than the compressed bytes</updates>');
   });
 
+  test('passes on a byte range: the Range header, and the 206 answer with its Content-Range', async () => {
+    const url = 'https://artifacts.joomla.org/drone/joomla/joomla-cms/6.2-dev/1/downloads/2/package.zip';
+    const asked = upstream({
+      [url]: () => new Response('PK', { status: 206, headers: { 'content-range': 'bytes 98-99/100', 'content-length': '2', 'accept-ranges': 'bytes' } }),
+    });
+    const request = (range) => new Request(`https://proxy.example/?url=${encodeURIComponent(url)}`, { headers: { origin: 'https://joomla-projects.github.io', range } });
+
+    const response = await proxy.fetch(request('bytes=-2'));
+
+    assert.equal(response.status, 206);
+    assert.equal(asked[0].init.headers.range, 'bytes=-2');
+    assert.equal(response.headers.get('content-range'), 'bytes 98-99/100');
+    assert.equal(response.headers.get('accept-ranges'), 'bytes');
+    assert.match(response.headers.get('access-control-expose-headers'), /content-range/);
+
+    // More than one range, or anything else, is not passed on.
+    await proxy.fetch(request('bytes=0-1, 5-6'));
+
+    assert.equal(asked[1].init.headers.range, undefined);
+  });
+
   test("takes the URL appended to the path, as @php-wasm's tcpOverFetch sends it", async () => {
     const asked = upstream({
       'https://update.joomla.org/language/details6/nl-NL_details.xml?a=1&b=2': () => new Response('<xml/>', { headers: { 'content-type': 'text/xml' } }),

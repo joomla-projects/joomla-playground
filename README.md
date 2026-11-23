@@ -37,8 +37,11 @@ sent to a server.
   The button **Apply build** lays it over the site: only the files that differ from the nightly build, with the
   built JavaScript and CSS. **Revert build** puts the original files back (changes to the database stay). Joomla's
   CI keeps those packages for about two weeks after the pull request's last commit; without one, the playground
-  says so and falls back to the Patch Tester. `&method=package` or `&method=patchtester` chooses the method
-  yourself. The packages come from artifacts.joomla.org, which needs the playground's CORS proxy.
+  says so and falls back to the Patch Tester, as it does for a pull request of a branch the playground has no
+  Joomla of (7.0-dev). `&method=package` or `&method=patchtester` chooses the method yourself. The packages come
+  from artifacts.joomla.org, which needs the playground's CORS proxy; the playground reads only the files that
+  differ (a few MB of the 35 MB package). A pull request that is behind its branch also takes the files it replaces
+  back to before the newer commits of the branch: the status says so.
 - **Multilingual site:** <https://joomla-projects.github.io/joomla-playground/?blueprint=heritage-demo>. A site in
   English, Dutch, German, French and Spanish, with content about UNESCO World Heritage sites from the
   [demonstration data](https://github.com/ceford/cefjdemos-plg-demodata) of Clifford E Ford. It starts in a few

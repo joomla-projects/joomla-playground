@@ -46,7 +46,8 @@ export default {
     const allowedOrigin = corsOrigin(origin, env);
     // Joomla's installer names a download after its Content-Disposition: without it, a language pack would be
     // saved without .zip and not be unpacked.
-    const exposed = 'content-length, content-type, content-disposition, etag, last-modified, x-playground-cors-proxy';
+    // Content-Range and Accept-Ranges: the playground reads part of a pull request's package (Range requests).
+    const exposed = 'content-length, content-type, content-disposition, content-range, accept-ranges, etag, last-modified, x-playground-cors-proxy';
     const cors = {
       'x-playground-cors-proxy': 'true',
       ...(allowedOrigin ? { 'access-control-allow-origin': allowedOrigin, 'access-control-expose-headers': exposed, vary: 'origin' } : {}),
@@ -99,10 +100,12 @@ export default {
         return fail(403, `Not an allowed download: ${target.href}`);
       }
 
+      // One byte range at most ("bytes=0-99", "bytes=100-", "bytes=-100"): enough to read part of a zip.
+      const range = request.headers.get('range');
       const response = await fetch(target.href, {
         method: request.method,
         redirect: 'manual',
-        headers: { 'user-agent': 'Joomla Playground CORS proxy' },
+        headers: { 'user-agent': 'Joomla Playground CORS proxy', ...(range && /^bytes=(\d+-\d*|-\d+)$/.test(range) ? { range } : {}) },
       });
 
       if ([301, 302, 303, 307, 308].includes(response.status) && response.headers.get('location')) {
@@ -123,7 +126,7 @@ export default {
       // bytes, so passing it on would cut the decoded body short.
       const encoded = response.headers.has('content-encoding');
 
-      for (const name of ['content-type', 'content-length', 'content-disposition', 'last-modified', 'etag']) {
+      for (const name of ['content-type', 'content-length', 'content-disposition', 'content-range', 'accept-ranges', 'last-modified', 'etag']) {
         response.headers.has(name) && !(name === 'content-length' && encoded) && headers.set(name, response.headers.get(name));
       }
 
