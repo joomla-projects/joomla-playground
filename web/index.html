@@ -17,43 +17,26 @@
   <link rel="preload" href="./joomla/versions.json" as="fetch" crossorigin fetchpriority="high">
   <link rel="modulepreload" href="./joomla/joomla-core-loader.js">
   <style>
+    /* Dark mode follows the browser, as Joomla's administrator does (the site's front end, Cassiopeia, has none). */
     :root {
       --bar: #1c2b4a;
       --bar-text: #f2f5fa;
       --muted: #b9c4d8;
       --accent: #f9a541;
       --error: #ff8a80;
-      --page: #ffffff;
-      --text: #1a1a1a;
-      --text-muted: #666666;
-      --link: #1a5fb4;
-      --link-border: #a7bfdc;
-      --danger: #a51d2d;
-      --danger-border: #c6a0a6;
-      --line: #dddddd;
-      --line-light: #eeeeee;
-      --selected: #e8f0fb;
-      --loading: #f2f5fa;
-      --loading-text: #1c2b4a;
+      --page: light-dark(#ffffff, #1b2335);
+      --text: light-dark(#1a1a1a, #e6ebf4);
+      --text-muted: light-dark(#666666, #9aa6bb);
+      --link: light-dark(#1a5fb4, #8db8f0);
+      --link-border: light-dark(#a7bfdc, #46628a);
+      --danger: light-dark(#a51d2d, #ff8a80);
+      --danger-border: light-dark(#c6a0a6, #7a4a4f);
+      --line: light-dark(#dddddd, #2c3750);
+      --line-light: light-dark(#eeeeee, #253047);
+      --selected: light-dark(#e8f0fb, #263552);
+      --loading: light-dark(#f2f5fa, #0f151d);
+      --loading-text: light-dark(#1c2b4a, #e6ebf4);
       color-scheme: light dark;
-    }
-
-    /* Dark mode follows the browser, as Joomla's administrator does (the site's front end, Cassiopeia, has none). */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --page: #1b2335;
-        --text: #e6ebf4;
-        --text-muted: #9aa6bb;
-        --link: #8db8f0;
-        --link-border: #46628a;
-        --danger: #ff8a80;
-        --danger-border: #7a4a4f;
-        --line: #2c3750;
-        --line-light: #253047;
-        --selected: #263552;
-        --loading: #0f151d;
-        --loading-text: #e6ebf4;
-      }
     }
 
     * { box-sizing: border-box; }
