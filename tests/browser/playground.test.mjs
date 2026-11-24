@@ -231,9 +231,9 @@ describe('Joomla Playground in the browser', () => {
   });
 
   test('saves the playground in the browser and opens it again after a reload', async () => {
-    page.once('dialog', (dialog) => dialog.accept('Persistence test'));
     const saveStarted = Date.now();
     await page.click('#save-site');
+    await answer(page, 'Persistence test');
     await page.waitForFunction(
       () => location.search === '?site=persistence-test' && document.querySelector('#status').textContent.includes('saved as'),
       null,
@@ -287,8 +287,8 @@ describe('Joomla Playground in the browser', () => {
     await page.click('#sites-menu summary');
     await page.waitForSelector('#sites-list a:has-text("Persistence test")', { timeout: 10000 });
 
-    page.once('dialog', (dialog) => dialog.accept('Renamed test'));
     await page.click('#sites-list li:has-text("Persistence test") button:has-text("Rename")');
+    await answer(page, 'Renamed test');
     await page.waitForSelector('#sites-list a:has-text("Renamed test")', { timeout: 10000 });
 
     assert.equal(await page.getAttribute('#sites-list a:has-text("Renamed test")', 'href'), '?site=persistence-test');
@@ -348,8 +348,8 @@ describe('Joomla Playground in the browser', () => {
     assert.ok(await siteShows(page, playground, 'Written in the browser'), 'The imported site has the article');
 
     // Saved, the imported site keeps placeholders for the media files: its base is not the export's size.
-    page.once('dialog', (dialog) => dialog.accept('Imported site'));
     await page.click('#save-site');
+    await answer(page, 'Imported site');
     await page.waitForFunction(() => location.search === '?site=imported-site', null, { timeout: 120000 });
 
     const baseSize = await page.evaluate(async () => {
@@ -447,7 +447,6 @@ describe('Blueprints', () => {
   test('switches PHP versions and starts over', async () => {
     const tab = await context.newPage();
 
-    tab.on('dialog', (dialog) => dialog.accept());
     await tab.goto(`${appUrl}?url=/index.php`);
 
     const first = await waitForPlayground(tab);
@@ -457,6 +456,7 @@ describe('Blueprints', () => {
 
     // PHP 8.5: a new playground from the same link.
     await tab.selectOption('#php-version', '8.5');
+    await answer(tab);
 
     const second = await waitForPlayground(tab, first.siteUrl);
 
@@ -472,6 +472,7 @@ describe('Blueprints', () => {
     assert.doesNotMatch(site.html, /Fatal error|Deprecated:|Warning:/);
 
     await tab.click('#reset-site');
+    await answer(tab);
 
     const third = await waitForPlayground(tab, second.siteUrl);
 
@@ -880,6 +881,19 @@ describe('Blueprints', () => {
   });
   });
 });
+
+/**
+ * Answers the playground page's own dialog (dialogs.js): enters the text, if one is asked for, and confirms.
+ */
+async function answer(target, text = null) {
+  await target.waitForSelector('#ask-dialog[open]', { timeout: 10000 });
+
+  if (text !== null) {
+    await target.fill('#ask-input', text);
+  }
+
+  await target.click('#ask-confirm');
+}
 
 /**
  * Waits until the page runs a playground (a new one, if the previous site URL is given).

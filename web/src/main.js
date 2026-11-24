@@ -9,6 +9,7 @@ import { deleteSite, freeSlug, isSiteOpen, listSites, readMeta, renameSite } fro
 import { PHP_VERSIONS, blueprintFromUrl } from './blueprint.js';
 import { parseMail } from './mail.js';
 import { forgetToken, gitHubHeaders, rememberToken, rememberedToken } from './github-token.js';
+import { askText, closeOnBackdropClick, confirmAction, tell } from './dialogs.js';
 
 const base = new URL('./', location.href);
 
@@ -238,7 +239,7 @@ function show(path = '/administrator/') {
 }
 
 async function saveSite() {
-  const title = prompt('Save this playground in your browser as:', 'My Joomla site');
+  const title = await askText('Save this playground in your browser as:', 'My Joomla site', { confirmLabel: 'Save' });
 
   if (!title) {
     return;
@@ -335,7 +336,7 @@ async function renderSites() {
     remove.setAttribute('aria-label', `Delete ${site.title}`);
 
     rename.onclick = async () => {
-      const title = prompt('New name for this site:', site.title)?.trim();
+      const title = (await askText('New name for this site:', site.title, { confirmLabel: 'Rename' }))?.trim();
 
       if (title && title !== site.title) {
         await renameSite(site.slug, title);
@@ -345,12 +346,12 @@ async function renderSites() {
 
     remove.onclick = async () => {
       if (await isSiteOpen(site.slug)) {
-        alert(`"${site.title}" is open in a tab. Close it first (or start a new playground there).`);
+        await tell(`"${site.title}" is open in a tab. Close it first (or start a new playground there).`);
 
         return;
       }
 
-      if (confirm(`Delete "${site.title}" from this browser? This cannot be undone.`)) {
+      if (await confirmAction(`Delete "${site.title}" from this browser? This cannot be undone.`, { confirmLabel: 'Delete', danger: true })) {
         await deleteSite(site.slug);
         await renderSites();
       }
@@ -422,11 +423,11 @@ function renderMails() {
  * Another PHP version: a saved site reopens with it (and keeps it); a temporary playground starts again from the
  * same link with it.
  */
-function switchPhp() {
+async function switchPhp() {
   const version = elements.php.value;
   const url = new URL(location.href);
 
-  if (!playground.site && !confirm(`Start a new playground with PHP ${version}? This one is not saved and will be lost.`)) {
+  if (!playground.site && !(await confirmAction(`Start a new playground with PHP ${version}? This one is not saved and will be lost.`, { confirmLabel: 'Start new playground' }))) {
     elements.php.value = playground.phpVersion;
 
     return;
@@ -436,13 +437,13 @@ function switchPhp() {
   location.href = url.href;
 }
 
-function switchJoomla() {
+async function switchJoomla() {
   const version = elements.joomla.value;
   const url = new URL(location.href);
 
   const bundle = bundles.versions.find((candidate) => candidate.joomla === version);
 
-  if (!confirm(`Start a new playground with Joomla ${bundleLabel(bundle)}? This one is not saved and will be lost.`)) {
+  if (!(await confirmAction(`Start a new playground with Joomla ${bundleLabel(bundle)}? This one is not saved and will be lost.`, { confirmLabel: 'Start new playground' }))) {
     elements.joomla.value = playground.manifest.joomla;
 
     return;
@@ -817,8 +818,8 @@ async function forgetGitHubToken() {
   renderGitHubToken();
 }
 
-function startOver() {
-  if (confirm('Throw this playground away and start again from the same link?')) {
+async function startOver() {
+  if (await confirmAction('Throw this playground away and start again from the same link?', { confirmLabel: 'Start over' })) {
     location.reload();
   }
 }
@@ -876,23 +877,8 @@ async function start() {
   };
 
   // Fallback for browsers without closedby="any" support (e.g. Safari).
-  if (!('closedBy' in HTMLDialogElement.prototype)) {
-    for (const dialog of [elements.mailDialog, elements.tokenDialog]) {
-      dialog.addEventListener('click', (event) => {
-        if (event.target !== dialog) {
-          return;
-        }
-
-        const rect = dialog.getBoundingClientRect();
-        const isDialogContent = rect.top <= event.clientY && event.clientY <= rect.top + rect.height
-          && rect.left <= event.clientX && event.clientX <= rect.left + rect.width;
-
-        if (!isDialogContent) {
-          dialog.close();
-        }
-      });
-    }
-  }
+  closeOnBackdropClick(elements.mailDialog);
+  closeOnBackdropClick(elements.tokenDialog);
 
   // A saved site writes its changes shortly after requests; when the tab is hidden or closed, write them now.
   const flush = () => playground?.site && call('flush').catch(() => {});
