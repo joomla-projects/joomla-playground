@@ -309,6 +309,18 @@ async function importSite(file) {
   }
 }
 
+/**
+ * Shows the saved sites again after a question about one of them: a modal dialog closes the My sites popover, so it
+ * opens again (and its toggle fills it), or, where it stayed open, is filled again.
+ */
+function showSites() {
+  if (elements.sitesList.matches(':popover-open')) {
+    renderSites();
+  } else {
+    elements.sitesList.showPopover();
+  }
+}
+
 async function renderSites() {
   const sites = await listSites();
 
@@ -339,21 +351,19 @@ async function renderSites() {
 
       if (title && title !== site.title) {
         await renameSite(site.slug, title);
-        await renderSites();
       }
+
+      showSites();
     };
 
     remove.onclick = async () => {
       if (await isSiteOpen(site.slug)) {
         await tell(`"${site.title}" is open in a tab. Close it first (or start a new playground there).`);
-
-        return;
-      }
-
-      if (await confirmAction(`Delete "${site.title}" from this browser? This cannot be undone.`, { confirmLabel: 'Delete', danger: true })) {
+      } else if (await confirmAction(`Delete "${site.title}" from this browser? This cannot be undone.`, { confirmLabel: 'Delete', danger: true })) {
         await deleteSite(site.slug);
-        await renderSites();
       }
+
+      showSites();
     };
 
     actions.append(rename, remove);
