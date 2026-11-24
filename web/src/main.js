@@ -31,7 +31,6 @@ const elements = {
   exportSite: document.querySelector('#export-site'),
   importSite: document.querySelector('#import-site'),
   importFile: document.querySelector('#import-file'),
-  sitesMenu: document.querySelector('#sites-menu'),
   sitesList: document.querySelector('#sites-list'),
   credentials: document.querySelector('#credentials'),
   info: document.querySelector('#info'),
@@ -861,7 +860,7 @@ async function start() {
   elements.exportSite.onclick = () => exportSite();
   elements.importSite.onclick = () => elements.importFile.click();
   elements.importFile.onchange = () => elements.importFile.files[0] && importSite(elements.importFile.files[0]);
-  elements.sitesMenu.ontoggle = () => elements.sitesMenu.open && renderSites();
+  elements.sitesList.ontoggle = (event) => event.newState === 'open' && renderSites();
   elements.pullRequestToggle.onclick = togglePullRequest;
   elements.gitHubToken.onclick = openTokenDialog;
   elements.tokenForm.onsubmit = saveGitHubToken;

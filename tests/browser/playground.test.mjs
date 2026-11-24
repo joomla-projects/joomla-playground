@@ -284,7 +284,7 @@ describe('Joomla Playground in the browser', () => {
   });
 
   test('lists the saved site under My sites, and renames it', async () => {
-    await page.click('#sites-menu summary');
+    await page.click('#sites-menu');
     await page.waitForSelector('#sites-list a:has-text("Persistence test")', { timeout: 10000 });
 
     page.once('dialog', (dialog) => dialog.accept('Renamed test'));
@@ -292,7 +292,7 @@ describe('Joomla Playground in the browser', () => {
     await page.waitForSelector('#sites-list a:has-text("Renamed test")', { timeout: 10000 });
 
     assert.equal(await page.getAttribute('#sites-list a:has-text("Renamed test")', 'href'), '?site=persistence-test');
-    await page.click('#sites-menu summary');
+    await page.click('#sites-menu');
   });
 
   test('opens a saved site in one tab only', async () => {
