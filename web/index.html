@@ -259,9 +259,7 @@
       font-weight: 600;
     }
 
-    #mail-dialog {
-      inline-size: min(1000px, calc(100% - 32px));
-      block-size: min(700px, calc(100dvh - 64px));
+    dialog {
       padding: 0;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -270,8 +268,14 @@
       background: var(--page);
     }
 
+    dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+    #mail-dialog {
+      inline-size: min(1000px, calc(100% - 32px));
+      block-size: min(700px, calc(100dvh - 64px));
+    }
+
     #mail-dialog[open] { display: grid; grid-template-rows: auto 1fr; }
-    #mail-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
 
     #mail-dialog header { flex-direction: row; align-items: center; justify-content: space-between; }
     #mail-dialog .body { display: grid; grid-template-columns: minmax(200px, 1fr) 2fr; min-block-size: 0; }
@@ -322,26 +326,16 @@
       #mail-list { border-inline-end: 0; border-block-end: 1px solid var(--line); }
     }
 
-    #token-dialog {
-      inline-size: min(560px, calc(100% - 32px));
-      padding: 0;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
-      color: var(--text);
-      background: var(--page);
-    }
-
-    #token-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+    #token-dialog { inline-size: min(560px, calc(100% - 32px)); }
     #token-dialog header { flex-direction: row; align-items: center; justify-content: space-between; }
     #token-dialog .body { display: grid; gap: 12px; padding: 16px; }
     #token-dialog p { margin: 0; line-height: 1.5; }
     #token-dialog a { color: var(--link); }
     #token-dialog input { inline-size: 100%; padding: 6px 8px; font: 0.8125rem ui-monospace, Consolas, monospace; }
     #token-dialog :where(a:any-link, input, .actions button):focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
-    #token-dialog .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    :is(#token-dialog, #ask-dialog) .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
-    #token-dialog .actions button {
+    :is(#token-dialog, #ask-dialog) .actions button {
       min-block-size: 28px;
       padding: 4px 12px;
       border: 1px solid var(--link-border);
@@ -357,11 +351,64 @@
     #token-state { color: var(--text-muted); font-size: 0.8125rem; }
     #token-error { color: var(--danger); font-size: 0.8125rem; }
 
+    /* The page's own questions and messages (dialogs.js). */
+    #ask-dialog { inline-size: min(440px, calc(100% - 32px)); }
+    #ask-dialog .body { display: grid; gap: 12px; padding: 16px; }
+    #ask-message { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+    #ask-input { inline-size: 100%; padding: 6px 8px; font: inherit; }
+    #ask-dialog :where(input, button):focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+    #ask-dialog #ask-confirm { color: var(--bar-text); background: var(--link); border-color: var(--link); }
+    #ask-dialog #ask-confirm.danger { background: var(--danger); border-color: var(--danger); }
+
+    @media (prefers-color-scheme: dark) {
+      #ask-dialog #ask-confirm { color: var(--page); }
+    }
+
+    /* Dialogs and popovers fade and grow in, and back out; on close, overlay and display keep them in the top
+       layer until the transition ends. */
+    @media (prefers-reduced-motion: no-preference) {
+      dialog,
+      [popover] {
+        opacity: 0;
+        scale: 0.96;
+        transition-property: opacity, scale, overlay, display;
+        transition-duration: 0.15s;
+        transition-timing-function: ease-out;
+        transition-behavior: allow-discrete;
+      }
+
+      dialog[open],
+      [popover]:popover-open {
+        opacity: 1;
+        scale: 1;
+      }
+
+      dialog::backdrop {
+        opacity: 0;
+        transition-property: opacity, overlay, display;
+        transition-duration: 0.15s;
+        transition-behavior: allow-discrete;
+      }
+
+      dialog[open]::backdrop { opacity: 1; }
+
+      @starting-style {
+        dialog[open],
+        [popover]:popover-open {
+          opacity: 0;
+          scale: 0.96;
+        }
+
+        dialog[open]::backdrop { opacity: 0; }
+      }
+    }
+
     @media (pointer: coarse) {
       header button,
       .version select,
       #sites-list button,
       #token-dialog .actions button,
+      #ask-dialog .actions button,
       #mail-list button {
         min-block-size: 44px;
       }
@@ -499,6 +546,16 @@
       <div class="actions">
         <button id="token-forget" type="button">Forget</button>
         <button id="token-save" type="submit" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="ask-dialog" closedby="any" aria-labelledby="ask-message">
+    <form class="body" method="dialog">
+      <p id="ask-message"></p>
+      <input id="ask-input" type="text" autocomplete="off" aria-labelledby="ask-message" hidden>
+      <div class="actions">
+        <button id="ask-cancel" type="button">Cancel</button>
+        <button id="ask-confirm" type="submit" value="confirm">OK</button>
       </div>
     </form>
   </dialog>
