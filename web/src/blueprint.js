@@ -183,6 +183,6 @@ function parseJson(text, what) {
   try {
     return JSON.parse(text);
   } catch (error) {
-    throw new Error(`Cannot read ${what}: ${error.message}`);
+    throw new Error(`Cannot read ${what}: ${error.message}`, { cause: error });
   }
 }
