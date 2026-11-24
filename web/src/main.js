@@ -632,7 +632,7 @@ function joomlaForBranch(branch) {
   }
 
   const numbers = (version) => version.split('.').map(Number);
-  const newestFirst = [...bundles.versions].sort((a, b) => {
+  const newestFirst = bundles.versions.toSorted((a, b) => {
     const [x, y] = [numbers(a.joomla), numbers(b.joomla)];
 
     return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
