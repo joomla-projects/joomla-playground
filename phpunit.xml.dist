@@ -20,8 +20,7 @@
         </include>
     </source>
     <php>
-        <!-- Joomla release the integration tests install; keep in line with .github/workflows/ci.yml -->
-        <env name="JOOMLA_VERSION" value="6.2.1"/>
+        <!-- The integration tests install the default of joomla-versions.json; JOOMLA_VERSION=x.y.z installs another -->
         <env name="JOOMLA_TEST_PORT" value="8781"/>
     </php>
 </phpunit>

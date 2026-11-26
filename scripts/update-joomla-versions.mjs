@@ -1,8 +1,8 @@
 // Keeps the Joomla versions of the playground up to date with the stable releases of joomla/joomla-cms.
 //
-// For every major version in joomla-versions.json, it takes the newest stable release of that major; the default
-// becomes the release GitHub marks as Latest. The Joomla version of the integration tests (JOOMLA_VERSION in
-// phpunit.xml.dist and the CI workflow) follows the default.
+// The playground offers the two maintained major versions: the default is the release GitHub marks as Latest, the
+// other one the newest stable release of the major version below it. The integration tests and the browser bundle
+// install the default (when JOOMLA_VERSION is not set), so joomla-versions.json is the only file this changes.
 //
 // Usage: node scripts/update-joomla-versions.mjs [--check]
 //   --check  only says what would change; exit code 1 if anything would
@@ -14,26 +14,27 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 /**
- * @param {{default: string, versions: string[]}} current
  * @param {Array<{tag_name: string, prerelease: boolean, draft: boolean}>} releases
  * @param {string} latest The tag GitHub marks as Latest
  * @returns {{default: string, versions: string[]}}
  */
-export function pickVersions(current, releases, latest) {
+export function pickVersions(releases, latest) {
   const stable = releases
     .filter((release) => !release.prerelease && !release.draft && /^\d+\.\d+\.\d+$/.test(release.tag_name))
     .map((release) => release.tag_name)
     .sort(compareVersions)
     .reverse();
-  const newestOfMajor = (version) => stable.find((tag) => tag.split('.')[0] === version.split('.')[0]) ?? version;
-  const versions = [...new Set(current.versions.map(newestOfMajor))];
-  const latestStable = stable.includes(latest) ? latest : newestOfMajor(current.default);
 
-  if (!versions.includes(latestStable)) {
-    versions.unshift(latestStable);
+  if (!stable.length) {
+    throw new Error('No stable Joomla release found');
   }
 
-  return { default: latestStable, versions: versions.sort(compareVersions).reverse() };
+  // Latest is a stable release, unless GitHub marks something else; then the newest stable release.
+  const newest = stable.includes(latest) ? latest : stable[0];
+  const major = Number(newest.split('.')[0]);
+  const previous = stable.find((tag) => Number(tag.split('.')[0]) === major - 1);
+
+  return { default: newest, versions: previous ? [newest, previous] : [newest] };
 }
 
 export function compareVersions(a, b) {
@@ -59,7 +60,7 @@ async function main() {
   const file = `${root}/joomla-versions.json`;
   const current = JSON.parse(readFileSync(file, 'utf8'));
   const [releases, latest] = await Promise.all([github('releases?per_page=100'), github('releases/latest')]);
-  const next = pickVersions(current, releases, latest.tag_name);
+  const next = pickVersions(releases, latest.tag_name);
   const changed = JSON.stringify(next) !== JSON.stringify({ default: current.default, versions: current.versions });
 
   console.log(`changed=${changed}`);
@@ -71,21 +72,6 @@ async function main() {
 
   writeFileSync(file, JSON.stringify({ ...current, ...next }, null, 2) + '\n');
 
-  // The integration tests install the default version.
-  const replacements = [
-    [`${root}/phpunit.xml.dist`, /(<env name="JOOMLA_VERSION" value=")[^"]+("\/>)/],
-    [`${root}/.github/workflows/ci.yml`, /(\n {2}JOOMLA_VERSION: )\S+()/],
-  ];
-
-  for (const [path, pattern] of replacements) {
-    const text = readFileSync(path, 'utf8');
-
-    if (!pattern.test(text)) {
-      throw new Error(`No JOOMLA_VERSION found in ${path}`);
-    }
-
-    writeFileSync(path, text.replace(pattern, `$1${next.default}$2`));
-  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

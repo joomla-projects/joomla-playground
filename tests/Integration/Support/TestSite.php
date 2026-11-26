@@ -9,7 +9,7 @@ namespace JoomlaPlayground\Tests\Integration\Support;
  * the CLI with this PHP; 'wasm' serves it and runs the CLI with PHP compiled to WebAssembly (wasm/serve.mjs and
  * wasm/cli.mjs, on @php-wasm/node).
  *
- * The Full Package of JOOMLA_VERSION is downloaded once into .cache/, unpacked into build/test-site and
+ * The Full Package of JOOMLA_VERSION (by default the default of joomla-versions.json) is downloaded once into .cache/, unpacked into build/test-site and
  * installed with bin/install-sqlite-site.php and a random Super User password, using the database driver in
  * JOOMLA_TEST_DRIVER (mysqlonsqlite, the default, or playgroundsqlite).
  */
@@ -40,7 +40,8 @@ final class TestSite
     private static function create(): self
     {
         $project = \dirname(__DIR__, 3);
-        $version = getenv('JOOMLA_VERSION') ?: throw new \RuntimeException('JOOMLA_VERSION is not set');
+        $version = getenv('JOOMLA_VERSION')
+            ?: json_decode(file_get_contents($project . '/joomla-versions.json'), true, flags: JSON_THROW_ON_ERROR)['default'];
         $port    = (int) (getenv('JOOMLA_TEST_PORT') ?: 8781);
         $driver  = getenv('JOOMLA_TEST_DRIVER') ?: 'mysqlonsqlite';
         $runtime = getenv('JOOMLA_TEST_RUNTIME') ?: 'native';

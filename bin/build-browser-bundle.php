@@ -22,7 +22,8 @@ const PLAYGROUND_ROOT = __DIR__ . '/..';
 require PLAYGROUND_ROOT . '/vendor/autoload.php';
 
 $options = getopt('', ['package:', 'out:', 'driver:']);
-$version = getenv('JOOMLA_VERSION') ?: '6.2.0';
+$version = getenv('JOOMLA_VERSION')
+    ?: json_decode(file_get_contents(PLAYGROUND_ROOT . '/joomla-versions.json'), true, flags: JSON_THROW_ON_ERROR)['default'];
 $package = $options['package'] ?? PLAYGROUND_ROOT . '/.cache/Joomla_' . $version . '-Stable-Full_Package.zip';
 $out     = $options['out'] ?? PLAYGROUND_ROOT . '/web/public/joomla';
 $driver  = $options['driver'] ?? 'mysqlonsqlite';
