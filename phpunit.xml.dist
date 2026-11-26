@@ -21,7 +21,7 @@
     </source>
     <php>
         <!-- Joomla release the integration tests install; keep in line with .github/workflows/ci.yml -->
-        <env name="JOOMLA_VERSION" value="6.2.0"/>
+        <env name="JOOMLA_VERSION" value="6.2.1"/>
         <env name="JOOMLA_TEST_PORT" value="8781"/>
     </php>
 </phpunit>

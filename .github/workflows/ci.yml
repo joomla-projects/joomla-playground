@@ -7,7 +7,7 @@ on:
 
 env:
   # Joomla release the integration tests install; keep in line with phpunit.xml.dist
-  JOOMLA_VERSION: 6.2.0
+  JOOMLA_VERSION: 6.2.1
 
 jobs:
   tests:
