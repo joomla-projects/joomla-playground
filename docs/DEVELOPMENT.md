@@ -67,11 +67,12 @@ Then open http://localhost:5400/.
   (`bin/download-language-packs.php`, cached in `.cache/language-packs/`; about 32 MB per version). The
   playground's system plugin points Joomla's download of such a pack to that copy. `--no-languages` skips
   them, for a quicker local build.
-- To offer another Joomla version, add it to `joomla-versions.json`; `default` is the version a new playground
-  gets. The integration tests use `JOOMLA_VERSION` (`phpunit.xml.dist`, CI).
-- `npm run joomla:versions` (`scripts/update-joomla-versions.mjs`) moves every version in the list to the newest
-  stable release of its major version. The default becomes the release GitHub marks as Latest, and
-  `JOOMLA_VERSION` follows it; `-- --check` only reports.
+- `joomla-versions.json` lists the Joomla versions the playground offers; `default` is the version a new
+  playground gets. The integration tests and `bin/build-browser-bundle.php` install the default too, unless
+  `JOOMLA_VERSION` says another version.
+- `npm run joomla:versions` (`scripts/update-joomla-versions.mjs`) sets the two maintained major versions: the
+  default is the release GitHub marks as Latest, the other one the newest stable release of the major version
+  below it. It only changes `joomla-versions.json`; `-- --check` only reports.
 - The **Joomla versions** workflow (`.github/workflows/joomla-versions.yml`) runs it every day. On new releases it
   pushes a branch and opens a pull request (the repository allows it: Settings > Actions >
   General > "Allow GitHub Actions to create and approve pull requests"; without it, an issue with a
