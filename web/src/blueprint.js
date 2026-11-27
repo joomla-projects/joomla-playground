@@ -122,6 +122,8 @@ export async function blueprintFromUrl(url, { pullRequestMethod = 'patchtester' 
     // The site as it is without the patch: the administrator, unless ?url= names the page the pull request changes.
     blueprint.pullRequest = Number(shortcuts.pullRequest);
     blueprint.landingPage = '/administrator/';
+    // Without Joomla's Welcome tour, which starts on the first visit to the administrator and covers the page to test.
+    blueprint.steps.push({ step: 'enableExtension', element: 'com_guidedtours', type: 'component', params: { allowTourAutoStart: 0 } });
   }
 
   if (shortcuts.landingPage) {

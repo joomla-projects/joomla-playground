@@ -755,6 +755,11 @@ describe('Blueprints', () => {
       const frame = await (await tab.waitForSelector('#joomla')).contentFrame();
 
       await frame.waitForFunction(() => document.title.includes('Home Dashboard'), null, { timeout: 60000 });
+
+      // Without Joomla's Welcome tour, which a new administrator would get: no tour to start on this page.
+      const options = await frame.evaluate(() => JSON.parse(document.querySelector('script.joomla-script-options')?.textContent ?? '{}'));
+
+      assert.equal(options['com_guidedtours.autotour'], '');
     } finally {
       await tab.close();
     }
