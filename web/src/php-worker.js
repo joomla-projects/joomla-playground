@@ -675,8 +675,12 @@ const PACKAGE_FOLDER = /^https:\/\/artifacts\.joomla\.org\/drone\/joomla\/joomla
 /** The originals of the files a pull request's package replaced or deleted, and the list of its changes. */
 const PACKAGE_BACKUPS = 'data/pull-requests';
 
-/** Up to this many files that differ, they are read from the package with Range requests; above it, it is downloaded. */
-const PACKAGE_RANGES_UP_TO = 400;
+/**
+ * Up to this many Range requests, the files that differ are read from the package piece by piece; above it, the
+ * package is downloaded in one request. The CORS proxy allows 60 requests per minute per visitor (proxy/wrangler.toml),
+ * and the page makes other requests through it too: half of that.
+ */
+const PACKAGE_RANGE_REQUESTS_UP_TO = 30;
 
 /**
  * Files of a package that stay as they are: what the bundle leaves out or changes on purpose (see
@@ -772,7 +776,7 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
     });
 
     // Only the list at the end of the package (about 1 MB) and the files that differ, with Range requests; the whole
-    // package (35 MB) when the server or the proxy sends it all, or when much has changed.
+    // package (35 MB) when the server or the proxy sends it all, or when that would take too many requests.
     const proxied = `${state.corsProxy}?url=${encodeURIComponent(fullPackage)}`;
     let zip = await openRemoteZip(proxied);
     const inPackage = zip.entries.filter((entry) => !skippedInPackage(entry.name));
@@ -782,8 +786,11 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
       return !known || known[0] !== entry.crc || known[1] !== entry.size;
     });
 
-    if (!zip.whole && changed.length > PACKAGE_RANGES_UP_TO) {
-      progress(`PR #${number}: downloading its build (${changed.length} files differ)`);
+    let requests = zip.requestsFor(changed);
+
+    if (requests > PACKAGE_RANGE_REQUESTS_UP_TO) {
+      requests = 1;
+      progress(`PR #${number}: downloading its build (${changed.length} files differ, spread over the package)`);
       zip = await memoryZip(await downloadAllowingProxy(fullPackage, `the build of PR #${number}`));
     } else {
       progress(`PR #${number}: reading the ${changed.length} files of its build that differ`);
@@ -802,7 +809,7 @@ async function pullRequestPackage({ pullRequest, folder = null, apply = null }) 
       }
 
       state.php.writeFile('/tmp/pr-details.json', JSON.stringify({
-        details: { pullRequest: number, folder, package: fullPackage, version, applied: new Date().toISOString(), downloaded: zip.requested?.() ?? zip.size },
+        details: { pullRequest: number, folder, package: fullPackage, version, applied: new Date().toISOString(), downloaded: zip.requested?.() ?? zip.size, requests },
         changed: [...contents.keys()],
         deleted,
       }));

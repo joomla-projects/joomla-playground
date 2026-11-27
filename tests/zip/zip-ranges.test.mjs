@@ -39,12 +39,17 @@ function makeZip(files) {
 }
 
 /** A fetch that serves bytes, with or without Range support; records the ranges asked for. */
-function server(bytes, { ranges = true } = {}) {
+function server(bytes, { ranges = true, refuseAfter = Infinity } = {}) {
   const asked = [];
 
   const get = async (url, { headers = {} } = {}) => {
     const range = headers.range;
     asked.push(range ?? 'all');
+
+    // Like the CORS proxy's rate limit: after so many requests, 429.
+    if (asked.length > refuseAfter) {
+      return new Response('Too many requests', { status: 429 });
+    }
 
     if (!ranges || !range) {
       return new Response(bytes, { status: 200 });
@@ -113,6 +118,38 @@ describe('zip reader', () => {
     assert.equal(new TextDecoder().decode(read.get('media/one.js')), files['media/one.js']);
     assert.equal(asked.length, 2);
     assert.match(asked[1], /^bytes=\d+-\d+$/);
+  });
+
+  test('says beforehand how many requests reading entries takes, so a rate limit can be avoided', async () => {
+    // 40 stored entries of 70 KB: wanting every other one leaves gaps larger than the 64 KB that are fetched along.
+    const block = (n) => Array.from({ length: 70000 }, (_, i) => String.fromCharCode(33 + ((i * 7919 + n * 31) % 90))).join('');
+    const spread = Object.fromEntries(Array.from({ length: 40 }, (_, n) => [`f/${String(n).padStart(2, '0')}.bin!`, block(n)]));
+    const bytes = makeZip(spread);
+    const open = async (options) => {
+      const fake = server(bytes, options);
+      const zip = await openRemoteZip('https://example.org/test.zip', { fetch: fake.get });
+
+      return { zip, fake, opened: fake.asked.length };
+    };
+
+    const { zip, fake, opened } = await open();
+    const sorted = [...zip.entries].sort((a, b) => a.offset - b.offset);
+    const everyOther = sorted.filter((_, i) => i % 2 === 0 && i < 36);
+    const neighbours = sorted.slice(0, 18);
+
+    assert.equal(zip.requestsFor(everyOther), 18);
+    assert.equal(zip.requestsFor(neighbours), 1);
+
+    await zip.read(everyOther);
+
+    assert.equal(fake.asked.length - opened, zip.requestsFor(everyOther), 'as many requests as it said');
+
+    // With a limit below that number, reading piece by piece fails: that is why the playground downloads the whole zip
+    // then (one request) instead.
+    const limited = await open({ refuseAfter: opened + 10 });
+
+    assert.ok(limited.zip.requestsFor(everyOther) > 10);
+    await assert.rejects(limited.zip.read(everyOther), /HTTP 429/);
   });
 
   test('uses the whole zip when the server ignores Range', async () => {

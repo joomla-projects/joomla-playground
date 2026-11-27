@@ -152,8 +152,9 @@ Joomla's CI (Drone) builds every pull request and keeps the packages for about t
 - Apply build (`pullRequestPackage` in `php-worker.js`): [`zip-ranges.js`](../web/src/zip-ranges.js) reads the
   central directory at the end of the build's Full Package with a Range request (about 1 MB of 35 MB), compares
   each file's CRC-32 and size with the bundle's `package-index.json` (made by `bin/build-browser-bundle.php` from
-  the package the bundle was built from), and reads only the files that differ. More than 400 files, or a server
-  without Range support: the whole package. Files the build lacks are deleted; `images/`, `installation/` and what
+  the package the bundle was built from), and reads only the files that differ, in one request per group of files
+  close together in the zip. When that takes more than 30 requests (the proxy allows 60 per minute per visitor), or
+  the server has no Range support: the whole package, in one request. Files the build lacks are deleted; `images/`, `installation/` and what
   the bundle leaves out stay. The originals go to `data/pull-requests/<number>/`, for Revert build.
 - The Full Package, not the Update Package that `pr_extension.xml` names: the Update Package leaves out `images/`.
 - Changed media files: the service worker serves `/media/` from the static bundle, where the site has empty
