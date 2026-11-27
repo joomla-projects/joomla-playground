@@ -23,7 +23,7 @@ const MERGE_GAP = 64 * 1024;
  * @param {string} url
  * @param {object} [options]
  * @param {typeof fetch} [options.fetch]
- * @returns {Promise<{size: number, entries: object[], read: (entries: object[]) => Promise<Map<string, Uint8Array>>, whole: Uint8Array|null, requested: () => number}>}
+ * @returns {Promise<{size: number, entries: object[], read: (entries: object[]) => Promise<Map<string, Uint8Array>>, requestsFor: (entries: object[]) => number, whole: Uint8Array|null, requested: () => number}>}
  *   whole is the zip itself when the server sent all of it instead of a range.
  */
 export async function openRemoteZip(url, { fetch: get = fetch } = {}) {
@@ -82,7 +82,16 @@ export async function openRemoteZip(url, { fetch: get = fetch } = {}) {
   const at = async (start, end) => (start >= tailStart ? first.subarray(start - tailStart, end - tailStart) : range(start, end));
   const entries = await centralDirectory(first, tailStart, at);
 
-  return { size, entries, read: (wanted) => readEntries(wanted, entries, at, { merge: true }), whole: null, requested: () => requested };
+  return {
+    size,
+    entries,
+    read: (wanted) => readEntries(wanted, entries, at, { merge: true }),
+    // How many requests read() makes for these entries: one per group of entries close together, outside the end of
+    // the zip that is already here. A proxy or server may allow only so many per minute.
+    requestsFor: (wanted) => groupEntries(wanted, { merge: true }).filter((group) => group.start < tailStart).length,
+    whole: null,
+    requested: () => requested,
+  };
 }
 
 /**
@@ -95,7 +104,7 @@ export async function memoryZip(bytes) {
   const tailStart = Math.max(0, bytes.length - TAIL_BYTES);
   const entries = await centralDirectory(bytes.subarray(tailStart), tailStart, at);
 
-  return { size: bytes.length, entries, read: (wanted) => readEntries(wanted, entries, at, { merge: false }) };
+  return { size: bytes.length, entries, read: (wanted) => readEntries(wanted, entries, at, { merge: false }), requestsFor: () => 0 };
 }
 
 /**
@@ -198,10 +207,9 @@ async function centralDirectory(tail, tailStart, at) {
 }
 
 /**
- * The contents of the given entries, by name. With merge, entries close together are fetched in one range.
+ * The byte ranges to read for the given entries: { start, end, entries }. With merge, entries close together share one.
  */
-async function readEntries(wanted, entries, at, { merge }) {
-  const files = new Map();
+function groupEntries(wanted, { merge }) {
   const sorted = [...wanted].sort((a, b) => a.offset - b.offset);
   const groups = [];
 
@@ -216,7 +224,16 @@ async function readEntries(wanted, entries, at, { merge }) {
     }
   }
 
-  for (const group of groups) {
+  return groups;
+}
+
+/**
+ * The contents of the given entries, by name. With merge, entries close together are fetched in one range.
+ */
+async function readEntries(wanted, entries, at, { merge }) {
+  const files = new Map();
+
+  for (const group of groupEntries(wanted, { merge })) {
     const bytes = await at(group.start, group.end);
 
     for (const entry of group.entries) {
