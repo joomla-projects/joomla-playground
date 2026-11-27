@@ -96,9 +96,11 @@ jobs:
           npm run test:proxy
           npm run test:scripts
 
+      # developer.joomla.org now and then gives GitHub Actions a bot check instead of a nightly build: then the copy
+      # in the cache will do, and without one the tests go on without that development branch.
       - name: Build the Joomla bundle and the playground
         run: |
-          npm run bundle
+          npm run bundle -- --development-optional
           npm run web:build
 
       - name: Site API tests (PHP in WebAssembly in Node, on the bundle)
