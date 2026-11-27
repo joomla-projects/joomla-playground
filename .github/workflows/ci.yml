@@ -103,6 +103,10 @@ jobs:
           npm run bundle -- --development-optional
           npm run web:build
 
+      # After the bundle: its Full Packages are in .cache/, to read with the zip reader as PHP does.
+      - name: Zip reader tests
+        run: npm run test:zip
+
       - name: Site API tests (PHP in WebAssembly in Node, on the bundle)
         run: npm run test:site-api
 

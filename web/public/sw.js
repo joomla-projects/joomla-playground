@@ -5,17 +5,55 @@
 // bundle (joomla/6.2.0/media/), everything else is sent over a BroadcastChannel to the PHP worker of the tab that
 // owns the scope, which runs Joomla. Media files the bundle does not have, such as those of an extension installed
 // in the playground, come from the site's own files, through the PHP worker too.
+//
+// In the site itself, the bundle's media files are empty placeholders. A media file that has content in the site
+// (a pull request's build laid over it, or an extension that replaced a core file) must come from the site, not
+// from the bundle: the PHP worker sends the list of those files ("media overrides") for its scope.
 
 const channel = new BroadcastChannel('joomla-playground');
 const pending = new Map();
 const TIMEOUT_MS = 120000;
 
+/** Per scope: the paths below the site root (/media/...) that come from the site instead of the bundle. */
+const mediaOverrides = new Map();
+const mediaOverridesWaiting = new Map();
+const MEDIA_OVERRIDES_TIMEOUT_MS = 3000;
+
 channel.onmessage = ({ data }) => {
   if (data?.type === 'response' && pending.has(data.id)) {
     pending.get(data.id)(data);
     pending.delete(data.id);
+  } else if (data?.type === 'media-overrides' && typeof data.scope === 'string' && Array.isArray(data.paths)) {
+    const paths = new Set(data.paths.map((path) => `/${path}`));
+
+    mediaOverrides.set(data.scope, paths);
+    mediaOverridesWaiting.get(data.scope)?.forEach((resolve) => resolve(paths));
+    mediaOverridesWaiting.delete(data.scope);
   }
 };
+
+/**
+ * The media overrides of a scope. A service worker that was stopped and started again has forgotten them: it asks
+ * the PHP worker of the scope, and takes none if no worker answers (an older playground, or a stopped one).
+ */
+function mediaOverridesOf(scope) {
+  if (mediaOverrides.has(scope)) {
+    return Promise.resolve(mediaOverrides.get(scope));
+  }
+
+  return new Promise((resolve) => {
+    const waiting = mediaOverridesWaiting.get(scope) ?? [];
+
+    waiting.push(resolve);
+    mediaOverridesWaiting.set(scope, waiting);
+
+    if (waiting.length === 1) {
+      channel.postMessage({ type: 'media-overrides-request', scope });
+    }
+
+    setTimeout(() => resolve(new Set()), MEDIA_OVERRIDES_TIMEOUT_MS);
+  });
+}
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -37,7 +75,15 @@ self.addEventListener('fetch', (event) => {
   const [, scope, major, minor, patch, path = '/'] = match;
 
   if (path.startsWith('/media/')) {
-    event.respondWith(fromBundle(new URL(`joomla/${major}.${minor}.${patch}${path}${url.search}`, base), path).then((response) => response ?? runInPhp(event.request, scope)));
+    event.respondWith(
+      mediaOverridesOf(scope).then(async (overrides) => {
+        if (overrides.has(decodeURIComponent(path))) {
+          return runInPhp(event.request, scope);
+        }
+
+        return (await fromBundle(new URL(`joomla/${major}.${minor}.${patch}${path}${url.search}`, base), path)) ?? runInPhp(event.request, scope);
+      })
+    );
 
     return;
   }

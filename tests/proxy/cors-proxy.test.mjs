@@ -3,7 +3,7 @@
 
 import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import proxy, { isAllowedHost, isAllowedUrl } from '../../proxy/cors-proxy.js';
+import proxy, { DEFAULT_ALLOWED_HOSTS, isAllowedHost, isAllowedUrl } from '../../proxy/cors-proxy.js';
 
 const realFetch = globalThis.fetch;
 
@@ -46,6 +46,39 @@ describe('CORS proxy', () => {
     assert.equal(response.headers.get('access-control-allow-origin'), '*');
     assert.equal(response.headers.get('content-type'), 'application/zip');
     assert.equal(response.headers.get('set-cookie'), null);
+  });
+
+  test('drops the Content-Length of a compressed answer, which fetch() has decoded', async () => {
+    upstream({
+      'https://downloads.joomla.org/details.xml': () =>
+        new Response('<updates>longer than the compressed bytes</updates>', { headers: { 'content-type': 'application/xml', 'content-length': '20', 'content-encoding': 'gzip' } }),
+    });
+
+    const response = await proxy.fetch(get('https://downloads.joomla.org/details.xml'));
+
+    assert.equal(response.headers.get('content-length'), null);
+    assert.equal(await response.text(), '<updates>longer than the compressed bytes</updates>');
+  });
+
+  test('passes on a byte range: the Range header, and the 206 answer with its Content-Range', async () => {
+    const url = 'https://artifacts.joomla.org/drone/joomla/joomla-cms/6.2-dev/1/downloads/2/package.zip';
+    const asked = upstream({
+      [url]: () => new Response('PK', { status: 206, headers: { 'content-range': 'bytes 98-99/100', 'content-length': '2', 'accept-ranges': 'bytes' } }),
+    });
+    const request = (range) => new Request(`https://proxy.example/?url=${encodeURIComponent(url)}`, { headers: { origin: 'https://joomla-projects.github.io', range } });
+
+    const response = await proxy.fetch(request('bytes=-2'));
+
+    assert.equal(response.status, 206);
+    assert.equal(asked[0].init.headers.range, 'bytes=-2');
+    assert.equal(response.headers.get('content-range'), 'bytes 98-99/100');
+    assert.equal(response.headers.get('accept-ranges'), 'bytes');
+    assert.match(response.headers.get('access-control-expose-headers'), /content-range/);
+
+    // More than one range, or anything else, is not passed on.
+    await proxy.fetch(request('bytes=0-1, 5-6'));
+
+    assert.equal(asked[1].init.headers.range, undefined);
   });
 
   test("takes the URL appended to the path, as @php-wasm's tcpOverFetch sends it", async () => {
@@ -135,6 +168,15 @@ describe('CORS proxy', () => {
     assert.ok(isAllowedUrl(new URL('https://s3-us-west-2.amazonaws.com/joomla-official-downloads/x/nl-NL.zip?sig=1'), entries));
     assert.ok(!isAllowedUrl(new URL('https://s3-us-west-2.amazonaws.com/someone-else/file.zip'), entries));
     assert.ok(!isAllowedUrl(new URL('https://s3-us-west-2.amazonaws.com/joomla-official-downloads-evil/file.zip'), entries));
+  });
+
+  test("allows the pull request packages of Joomla's CI, and nothing else of that host", () => {
+    const folder = 'https://artifacts.joomla.org/drone/joomla/joomla-cms/6.2-dev/48901/downloads/98077';
+
+    assert.ok(isAllowedUrl(new URL(`${folder}/pr_extension.xml`), DEFAULT_ALLOWED_HOSTS));
+    assert.ok(isAllowedUrl(new URL(`${folder}/Joomla_6.2.1-rc2-dev+pr.48901-Development-Update_Package.zip`), DEFAULT_ALLOWED_HOSTS));
+    assert.ok(!isAllowedUrl(new URL('https://artifacts.joomla.org/drone/joomla/joomla-cms-evil/x.zip'), DEFAULT_ALLOWED_HOSTS));
+    assert.ok(!isAllowedUrl(new URL('https://artifacts.joomla.org/other/file.zip'), DEFAULT_ALLOWED_HOSTS));
   });
 
   test('matches wildcard hosts', () => {

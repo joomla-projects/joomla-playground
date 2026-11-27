@@ -120,7 +120,10 @@ Worker.
   Install from URL) go through `@php-wasm`'s `tcpOverFetch`, which asks for `<proxy><URL>`.
 - Every answer has an `X-Playground-Cors-Proxy` header, which `tcpOverFetch` requires.
 - Only GET and HEAD, only https, only allowed hosts (downloads/update/extensions.joomla.org, Joomla's download
-  bucket on S3, GitHub and its download hosts), also after redirects, which it follows itself; at most 50 MB.
+  bucket on S3, GitHub and its download hosts, and the pull request builds of Joomla's CI under
+  `artifacts.joomla.org/drone/joomla/joomla-cms/`), also after redirects, which it follows itself; at most 50 MB.
+- It passes on a single byte range (`Range: bytes=…`) and the `206` answer with its `Content-Range`: the
+  playground reads only the file list and the changed files of a pull request's build (see below).
 - `ALLOWED_ORIGINS` limits which sites may use it; a rate limiting binding limits requests per IP.
 - Tests with a fake upstream: `npm run test:proxy`.
 - `npm run proxy:dev` runs it locally with Node on port 5480; build the playground with
@@ -133,7 +136,33 @@ cd proxy && npx wrangler deploy
 ```
 
 Then set the repository variable `CORS_PROXY` to `https://<worker host>/` and run the Pages workflow: it builds
-the playground with it (`VITE_CORS_PROXY`).
+the playground with it (`VITE_CORS_PROXY`). After a change to the proxy (such as a new allowed host), deploy it
+again; when the worker has its own `ALLOWED_HOSTS` variable, add new hosts there too, as that list replaces the
+default one.
+
+## Pull requests that need a build
+
+A pull request of joomla-cms that changes JavaScript, CSS, Vue or Composer dependencies (labels *NPM Resource
+Changed*, *Composer Dependency Changed*) cannot be tested with the Patch Tester: its changes only show after a build.
+Joomla's CI (Drone) builds every pull request and keeps the packages for about two weeks; the commit status
+"Download" on GitHub links the folder. With `?pr=<number>` the playground uses that build ("package mode"):
+- `main.js` asks GitHub for the pull request, its labels and the "Download" status, and checks (HEAD of
+  `pr_extension.xml`, through the proxy) that the build still exists: GitHub keeps the status after the CI deleted it.
+  Without a build it falls back to the Patch Tester with a warning. `&method=package|patchtester` chooses.
+- Apply build (`pullRequestPackage` in `php-worker.js`): [`zip-ranges.js`](../web/src/zip-ranges.js) reads the
+  central directory at the end of the build's Full Package with a Range request (about 1 MB of 35 MB), compares
+  each file's CRC-32 and size with the bundle's `package-index.json` (made by `bin/build-browser-bundle.php` from
+  the package the bundle was built from), and reads only the files that differ. More than 400 files, or a server
+  without Range support: the whole package. Files the build lacks are deleted; `images/`, `installation/` and what
+  the bundle leaves out stay. The originals go to `data/pull-requests/<number>/`, for Revert build.
+- The Full Package, not the Update Package that `pr_extension.xml` names: the Update Package leaves out `images/`.
+- Changed media files: the service worker serves `/media/` from the static bundle, where the site has empty
+  placeholders. The PHP worker tells it (BroadcastChannel, `media-overrides`) which media files have real content in
+  the site, and the service worker takes those from PHP.
+- Afterwards: Joomla's caches are cleared, the media version refreshed, and core SQL update files the build adds
+  are run.
+- Tests: `npm run test:zip` (the zip reader, also against a Full Package in `.cache/` when there is one) and
+  `npm run test:proxy`.
 
 ## Joomla on SQLite with native PHP
 

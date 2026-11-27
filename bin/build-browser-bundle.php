@@ -14,6 +14,8 @@
  *   site.zip       the installed site, with empty placeholders for the static files in media/ (Joomla checks that
  *                  they exist before linking them; the browser gets them from media/)
  *   media/         the static media files
+ *   package-index.json
+ *                  every file of the Full Package (without installation/): path => [CRC-32, size]
  *   manifest.json  Joomla version, database driver, sizes
  */
 
@@ -144,13 +146,34 @@ foreach (files($site) as $file) {
 
 $zip->close();
 
+// The files of the Joomla package this bundle was made from, with their CRC-32 and size: a pull request's package
+// of Joomla's CI is compared with it, so the playground writes only the files the pull request changes and deletes
+// the ones it removes (see pullRequestPackage() in web/src/php-worker.js).
+step('Writing the package index');
+$index    = [];
+$packaged = new ZipArchive();
+$packaged->open($package) === true || fail('Cannot read ' . $package . ' again');
+
+for ($entry = 0; $entry < $packaged->numFiles; $entry++) {
+    $stat = $packaged->statIndex($entry);
+
+    if (!str_ends_with($stat['name'], '/') && !str_starts_with($stat['name'], 'installation/')) {
+        $index[$stat['name']] = [\sprintf('%08x', $stat['crc']), $stat['size']];
+    }
+}
+
+$packaged->close();
+ksort($index);
+file_put_contents($out . '/package-index.json', json_encode($index, JSON_UNESCAPED_SLASHES));
+
 $manifest = [
-    'joomla'     => $version,
-    'driver'     => $driver,
-    'built'      => gmdate('c'),
-    'siteZip'    => filesize($out . '/site.zip'),
-    'mediaFiles' => $mediaFiles,
-    'mediaBytes' => $mediaBytes,
+    'joomla'       => $version,
+    'driver'       => $driver,
+    'built'        => gmdate('c'),
+    'siteZip'      => filesize($out . '/site.zip'),
+    'mediaFiles'   => $mediaFiles,
+    'mediaBytes'   => $mediaBytes,
+    'packageIndex' => 'package-index.json',
 ];
 file_put_contents($out . '/manifest.json', json_encode($manifest, JSON_PRETTY_PRINT) . "\n");
 

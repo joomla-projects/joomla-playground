@@ -17,8 +17,9 @@ import { journalFSEvents } from '@php-wasm/fs-journal';
 import { createSpawnHandler } from '@php-wasm/util';
 import { hasBase, readBase, readMeta, readSnapshot, siteLockName, writeBase, writeMeta, writeSnapshot } from './storage.js';
 import { DEFAULT_PHP_VERSION } from './blueprint.js';
-import { BlueprintError, runSteps } from './blueprint-steps.js';
+import { BlueprintError, joomlaPhp, runSteps } from './blueprint-steps.js';
 import { createSiteApi } from './site-api.js';
+import { memoryZip, openRemoteZip } from './zip-ranges.js';
 
 const DOCUMENT_ROOT = '/var/www/html';
 const CA_BUNDLE = '/internal/shared/ca-bundle.crt';
@@ -66,7 +67,7 @@ function serialized(task) {
   return run;
 }
 
-const actions = { boot, save, exportSite, flush, site: siteApi, pullRequestTest, patchTester };
+const actions = { boot, save, exportSite, flush, site: siteApi, pullRequestTest, patchTester, pullRequestPackage };
 
 self.onmessage = async ({ data }) => {
   const action = actions[data?.type];
@@ -179,6 +180,10 @@ async function boot({ base, scope, joomla, site = null, title = null, zip = null
     lap('restore');
   }
 
+  // The media files with content (an export's own, a pull request's build, files of extensions): the service
+  // worker takes those from the site instead of the bundle. From here on, changes below media/ update the list.
+  const mediaOverrides = await scanMediaOverrides(php);
+
   // Before the journal starts: a change that is made at every start, not saved with the site.
   trustPlaygroundCa(php, caRoot);
 
@@ -238,6 +243,10 @@ async function boot({ base, scope, joomla, site = null, title = null, zip = null
     handler: createHandler(),
     manifest,
     bundleUrl,
+    scope,
+    corsProxy,
+    caRoot,
+    mediaOverrides,
     password,
     site: null,
     base: { id: meta?.base ?? null, bytes: meta ? null : files.bytes },
@@ -312,7 +321,10 @@ async function boot({ base, scope, joomla, site = null, title = null, zip = null
     const queued = async (task) => {
       await new Promise((resolve) => setTimeout(resolve, 20));
 
-      return serialized(task).finally(scheduleSnapshot);
+      return serialized(task).finally(() => {
+        updateMediaOverrides();
+        scheduleSnapshot();
+      });
     };
     const notice = (message) => self.postMessage({ type: 'background', message });
 
@@ -322,10 +334,20 @@ async function boot({ base, scope, joomla, site = null, title = null, zip = null
   }
 
   channel.onmessage = ({ data }) => {
-    if (data?.type === 'request' && data.scope === scope) {
+    if (data?.scope !== scope) {
+      return;
+    }
+
+    if (data.type === 'request') {
       answer(data);
+    } else if (data.type === 'media-overrides-request') {
+      publishMediaOverrides();
     }
   };
+
+  // The blueprint's steps may have written media files: the service worker gets the list before the first page.
+  updateMediaOverrides();
+  publishMediaOverrides();
 
   return {
     value: {
@@ -421,6 +443,12 @@ function trackChange(changes, { operation, path, toPath, nodeType }) {
   const from = relative(path);
   const to = operation === 'RENAME' ? relative(toPath) : null;
 
+  for (const path of [from, to]) {
+    if (path === 'media' || path?.startsWith('media/')) {
+      mediaTouched.add(path);
+    }
+  }
+
   if (from) {
     changes.paths.add(from);
   }
@@ -435,6 +463,92 @@ function trackChange(changes, { operation, path, toPath, nodeType }) {
 
   if (state && (from || to)) {
     state.dirty = true;
+  }
+}
+
+/** Paths below media/ that PHP created, changed, renamed or deleted since the media overrides were last updated. */
+const mediaTouched = new Set();
+
+/**
+ * The files below media/ that have content, relative to the document root. The bundle's media files are empty
+ * placeholders in the site (see bin/build-browser-bundle.php); the service worker serves those from the bundle.
+ */
+async function scanMediaOverrides(php) {
+  const response = await runPhp(php, `
+    $root  = '${DOCUMENT_ROOT}';
+    $found = [];
+    if (is_dir($root . '/media')) {
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/media', FilesystemIterator::SKIP_DOTS));
+        foreach ($files as $file) {
+            if ($file->isFile() && $file->getSize() > 0) {
+                $found[] = substr($file->getPathname(), strlen($root) + 1);
+            }
+        }
+    }
+    echo json_encode($found);
+  `);
+
+  return new Set(JSON.parse(response.text));
+}
+
+/**
+ * Brings the media overrides up to date with the paths PHP touched, and sends them to the service worker when they
+ * changed: before the answer to the request that changed them, so the next page gets the new files.
+ */
+function updateMediaOverrides() {
+  if (!state || !mediaTouched.size) {
+    return;
+  }
+
+  const overrides = state.mediaOverrides;
+  const before = overrides.size;
+  let changed = false;
+
+  const check = (relative) => {
+    const absolute = `${DOCUMENT_ROOT}/${relative}`;
+
+    if (state.php.isDir(absolute)) {
+      for (const name of state.php.listFiles(absolute)) {
+        check(`${relative}/${name}`);
+      }
+
+      return;
+    }
+
+    const hasContent = state.php.isFile(absolute) && state.php.readFileAsBuffer(absolute).length > 0;
+
+    if (hasContent !== overrides.has(relative)) {
+      hasContent ? overrides.add(relative) : overrides.delete(relative);
+      changed = true;
+    }
+  };
+
+  for (const relative of mediaTouched) {
+    // A deleted or renamed folder: its files are gone from that place.
+    if (!state.php.fileExists(`${DOCUMENT_ROOT}/${relative}`)) {
+      for (const path of overrides) {
+        if (path === relative || path.startsWith(`${relative}/`)) {
+          overrides.delete(path);
+          changed = true;
+        }
+      }
+
+      continue;
+    }
+
+    check(relative);
+  }
+
+  mediaTouched.clear();
+
+  if (changed || overrides.size !== before) {
+    publishMediaOverrides();
+  }
+}
+
+function publishMediaOverrides() {
+  if (state) {
+    channel.postMessage({ type: 'media-overrides', scope: state.scope, paths: [...state.mediaOverrides] });
   }
 }
 
@@ -553,6 +667,331 @@ async function patchTester({ set = null, overwrite = false, clear = null } = {})
   }
 
   return { value: result };
+}
+
+/** A build folder of Joomla's CI for a pull request of joomla-cms, as its "Download" status links it. */
+const PACKAGE_FOLDER = /^https:\/\/artifacts\.joomla\.org\/drone\/joomla\/joomla-cms\/[A-Za-z0-9._-]+\/[1-9][0-9]*\/downloads\/[1-9][0-9]*$/;
+
+/** The originals of the files a pull request's package replaced or deleted, and the list of its changes. */
+const PACKAGE_BACKUPS = 'data/pull-requests';
+
+/** Up to this many files that differ, they are read from the package with Range requests; above it, it is downloaded. */
+const PACKAGE_RANGES_UP_TO = 400;
+
+/**
+ * Files of a package that stay as they are: what the bundle leaves out or changes on purpose (see
+ * bin/build-browser-bundle.php), and what is no part of a site's code (images/ is the site's own).
+ */
+function skippedInPackage(name) {
+  return name.endsWith('/')
+    || name.startsWith('installation/')
+    || name.startsWith('images/')
+    || /^(tmp|cache|administrator\/cache|administrator\/logs)\//.test(name)
+    || /^media\/.*\.(gz|scss|less|ts|map)$/.test(name)
+    || name === 'plugins/system/webauthn/fido.jwt'
+    || name === 'configuration.php';
+}
+
+/**
+ * A pull request's build from Joomla's CI (its Full Package on artifacts.joomla.org), laid over the site, or taken
+ * off again. For pull requests the Patch Tester cannot test: changed JavaScript, CSS or Vue sources that need
+ * building ("NPM Resource Changed"), or changed Composer dependencies.
+ *
+ * - apply: true   reads the list of files at the end of the package (Range requests, see zip-ranges.js), compares
+ *                 every file with the package the bundle was made from (its package index, see
+ *                 bin/build-browser-bundle.php), reads and writes the ones that differ, deletes the ones
+ *                 the pull request removed, and keeps the originals in data/pull-requests/<number>/. Then it clears
+ *                 the caches, refreshes Joomla's media version and, when the pull request has database changes,
+ *                 runs Joomla's update queries.
+ * - apply: false  puts the originals back (database changes stay).
+ * - apply: null   only says whether the package is applied.
+ *
+ * @returns {{applied: boolean, changes: object|null}}
+ */
+async function pullRequestPackage({ pullRequest, folder = null, apply = null }) {
+  if (!state) {
+    throw new Error('The playground is not running');
+  }
+
+  const number = Number(pullRequest);
+
+  if (!Number.isInteger(number) || number < 1) {
+    throw new Error(`Not a pull request number: ${pullRequest}`);
+  }
+
+  const backup = `${DOCUMENT_ROOT}/${PACKAGE_BACKUPS}/${number}`;
+  const changesFile = `${backup}/changes.json`;
+  const current = () => (state.php.fileExists(changesFile) ? JSON.parse(state.php.readFileAsText(changesFile)) : null);
+
+  if (apply === null) {
+    const changes = current();
+
+    return { value: { applied: Boolean(changes), changes } };
+  }
+
+  if (apply && current()) {
+    return { value: { applied: true, changes: current() } };
+  }
+
+  if (!apply && !current()) {
+    return { value: { applied: false, changes: null } };
+  }
+
+  if (apply) {
+    if (!PACKAGE_FOLDER.test(String(folder))) {
+      throw new Error(`Not a package folder of Joomla's CI: ${folder}`);
+    }
+
+    if (!state.manifest.packageIndex) {
+      throw new Error('This Joomla bundle has no package index (bin/build-browser-bundle.php makes it): it cannot compare a pull request package with it');
+    }
+
+    progress(`PR #${number}: reading the package of Joomla's CI`);
+    const details = new TextDecoder().decode(await downloadAllowingProxy(`${folder}/pr_extension.xml`, 'the package details'));
+    const url = details.match(/<downloadurl[^>]*>\s*([^<\s]+)\s*<\/downloadurl>/)?.[1]?.replace(/&amp;/g, '&');
+    const version = details.match(/<version>([^<]+)<\/version>/)?.[1] ?? null;
+
+    if (!url?.startsWith(`${folder}/`) || !url.endsWith('-Update_Package.zip')) {
+      throw new Error(`The package details of PR #${number} name no update package in its folder: ${url ?? 'none'}`);
+    }
+
+    // The details name the Update Package, which leaves out images/ (a site's own images): a file missing from it is
+    // not one the pull request deleted. The Full Package beside it has all files.
+    const fullPackage = url.replace(/-Update_Package\.zip$/, '-Full_Package.zip');
+
+    if (!state.corsProxy) {
+      throw new Error(`Joomla's CI does not allow downloads from other sites (CORS), and this playground has no CORS proxy`);
+    }
+
+    const index = await fetch(new URL(state.manifest.packageIndex, state.bundleUrl)).then((response) => {
+      if (!response.ok) {
+        throw new Error(`Cannot read the bundle's package index: HTTP ${response.status}`);
+      }
+
+      return response.json();
+    });
+
+    // Only the list at the end of the package (about 1 MB) and the files that differ, with Range requests; the whole
+    // package (35 MB) when the server or the proxy sends it all, or when much has changed.
+    const proxied = `${state.corsProxy}?url=${encodeURIComponent(fullPackage)}`;
+    let zip = await openRemoteZip(proxied);
+    const inPackage = zip.entries.filter((entry) => !skippedInPackage(entry.name));
+    const changed = inPackage.filter((entry) => {
+      const known = index[entry.name];
+
+      return !known || known[0] !== entry.crc || known[1] !== entry.size;
+    });
+
+    if (!zip.whole && changed.length > PACKAGE_RANGES_UP_TO) {
+      progress(`PR #${number}: downloading its build (${changed.length} files differ)`);
+      zip = await memoryZip(await downloadAllowingProxy(fullPackage, `the build of PR #${number}`));
+    } else {
+      progress(`PR #${number}: reading the ${changed.length} files of its build that differ`);
+    }
+
+    // The same file either way, so the entries (and their offsets) are the same.
+    const contents = await zip.read(changed);
+    const names = new Set(inPackage.map((entry) => entry.name));
+    const deleted = Object.keys(index).filter((name) => !names.has(name) && !skippedInPackage(name));
+
+    progress(`PR #${number}: laying its build over the site`);
+    const result = await serialized(async () => {
+      for (const [name, bytes] of contents) {
+        state.php.mkdir(`/tmp/pr-files/${name.slice(0, name.lastIndexOf('/'))}`);
+        state.php.writeFile(`/tmp/pr-files/${name}`, bytes);
+      }
+
+      state.php.writeFile('/tmp/pr-details.json', JSON.stringify({
+        details: { pullRequest: number, folder, package: fullPackage, version, applied: new Date().toISOString(), downloaded: zip.requested?.() ?? zip.size },
+        changed: [...contents.keys()],
+        deleted,
+      }));
+
+      try {
+        const response = await runPhp(state.php, `
+          $root    = '${DOCUMENT_ROOT}';
+          $backup  = ${JSON.stringify(backup)};
+          $input   = json_decode(file_get_contents('/tmp/pr-details.json'), true);
+          $changes = $input['details'] + ['added' => [], 'replaced' => [], 'deleted' => []];
+
+          $keep = static function (string $name) use ($root, $backup): void {
+              $target = $backup . '/original/' . $name;
+              is_dir(dirname($target)) || mkdir(dirname($target), 0777, true);
+              copy($root . '/' . $name, $target);
+          };
+
+          is_dir($backup) || mkdir($backup, 0777, true);
+
+          foreach ($input['changed'] as $name) {
+              $target = $root . '/' . $name;
+
+              if (is_file($target)) {
+                  $keep($name);
+                  $changes['replaced'][] = $name;
+              } else {
+                  $changes['added'][] = $name;
+              }
+
+              is_dir(dirname($target)) || mkdir(dirname($target), 0777, true);
+              is_file($target) && chmod($target, 0666);
+              copy('/tmp/pr-files/' . $name, $target);
+          }
+
+          foreach ($input['deleted'] as $name) {
+              if (is_file($root . '/' . $name)) {
+                  $keep($name);
+                  chmod($root . '/' . $name, 0666);
+                  unlink($root . '/' . $name);
+                  $changes['deleted'][] = $name;
+              }
+          }
+
+          file_put_contents($backup . '/changes.json', json_encode($changes, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+          echo json_encode($changes);
+        `);
+
+        return JSON.parse(response.text);
+      } finally {
+        state.php.fileExists('/tmp/pr-details.json') && state.php.unlink('/tmp/pr-details.json');
+        state.php.isDir('/tmp/pr-files') && state.php.rmdir('/tmp/pr-files', { recursive: true });
+      }
+    });
+
+    const database = /^administrator\/components\/com_admin\/sql\/updates\//;
+    const sql = [...result.added, ...result.replaced].some((name) => database.test(name)) ? await runDatabaseUpdates() : null;
+
+    if (sql) {
+      result.sql = sql;
+      state.php.writeFile(changesFile, JSON.stringify(result, null, 2));
+    }
+
+    await afterPackageChange();
+
+    return { value: { applied: true, changes: result } };
+  }
+
+  progress(`PR #${number}: putting the original files back`);
+  const changes = current();
+
+  await serialized(() =>
+    runPhp(state.php, `
+      $root    = '${DOCUMENT_ROOT}';
+      $backup  = ${JSON.stringify(backup)};
+      $changes = json_decode(file_get_contents($backup . '/changes.json'), true);
+
+      foreach ($changes['added'] as $name) {
+          if (is_file($root . '/' . $name)) {
+              chmod($root . '/' . $name, 0666);
+              unlink($root . '/' . $name);
+          }
+      }
+
+      foreach ([...$changes['replaced'], ...$changes['deleted']] as $name) {
+          $target = $root . '/' . $name;
+          is_dir(dirname($target)) || mkdir(dirname($target), 0777, true);
+          is_file($target) && chmod($target, 0666);
+          copy($backup . '/original/' . $name, $target);
+      }
+
+      $remove = function (string $path) use (&$remove) {
+          if (is_dir($path)) {
+              array_map(fn ($name) => $remove($path . '/' . $name), array_diff(scandir($path), ['.', '..']));
+              rmdir($path);
+          } elseif (is_file($path)) {
+              unlink($path);
+          }
+      };
+      $remove($backup);
+    `)
+  );
+
+  await afterPackageChange();
+
+  return { value: { applied: false, changes } };
+}
+
+/**
+ * After files of a pull request's package were laid over the site or taken off: Joomla rebuilds its caches (its
+ * namespace map, for one), the browser loads the changed scripts and styles again (a new media version), the
+ * playground's CA stays in Joomla's CA bundle, and the service worker learns which media files changed.
+ */
+async function afterPackageChange() {
+  await serialized(() =>
+    runPhp(state.php, `
+      $root = '${DOCUMENT_ROOT}';
+      foreach (['administrator/cache', 'cache'] as $folder) {
+          $items = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $folder, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+          foreach ($items as $item) {
+              if ($item->isDir()) {
+                  @rmdir($item->getPathname());
+              } elseif ($item->getFilename() !== 'index.html') {
+                  unlink($item->getPathname());
+              }
+          }
+      }
+      ${joomlaPhp(DOCUMENT_ROOT)}
+      (new \\Joomla\\CMS\\Version())->refreshMediaVersion();
+    `)
+  );
+
+  trustPlaygroundCa(state.php, state.caRoot);
+  updateMediaOverrides();
+  publishMediaOverrides();
+  scheduleSnapshot({ now: true });
+}
+
+/**
+ * Runs Joomla's own update queries (administrator/components/com_admin/sql/updates) that are newer than the
+ * database, as Joomla Update does after an update.
+ *
+ * @returns {{ok: boolean, message: string}}
+ */
+async function runDatabaseUpdates() {
+  progress('Running the database changes of the pull request');
+
+  try {
+    const response = await serialized(() =>
+      runPhp(state.php, `
+        ${joomlaPhp(DOCUMENT_ROOT)}
+        $extension = \\Joomla\\CMS\\Extension\\ExtensionHelper::getExtensionRecord('joomla', 'file');
+        $manifest  = simplexml_load_file(JPATH_ADMINISTRATOR . '/manifests/files/joomla.xml');
+        $installer = \\Joomla\\CMS\\Installer\\Installer::getInstance();
+        $installer->setPath('extension_root', JPATH_ROOT);
+        $result = $installer->parseSchemaUpdates($manifest->update->schemas, $extension->extension_id);
+        echo json_encode(['ok' => $result !== false, 'message' => $result === false ? 'Joomla could not run the update queries' : 'Update queries run: ' . (int) $result]);
+      `)
+    );
+
+    return JSON.parse(response.text.slice(response.text.indexOf('{')));
+  } catch (error) {
+    return { ok: false, message: String(error?.message ?? error).slice(0, 500) };
+  }
+}
+
+/** Hosts that never allow downloads from other sites (CORS): straight to the CORS proxy, without trying first. */
+const NO_CORS_HOSTS = ['artifacts.joomla.org'];
+
+/**
+ * Downloads a file: directly when its host allows it (CORS), otherwise through the CORS proxy.
+ */
+async function downloadAllowingProxy(url, what) {
+  if (state.corsProxy && NO_CORS_HOSTS.includes(new URL(url).host)) {
+    return download(new URL(`${state.corsProxy}?url=${encodeURIComponent(url)}`), what);
+  }
+
+  try {
+    return await download(new URL(url), what);
+  } catch (error) {
+    if (!(error instanceof TypeError)) {
+      throw error;
+    }
+
+    if (!state.corsProxy) {
+      throw new Error(`Cannot download ${what}: ${new URL(url).host} does not allow it (CORS), and this playground has no CORS proxy`);
+    }
+
+    return download(new URL(`${state.corsProxy}?url=${encodeURIComponent(url)}`), what);
+  }
 }
 
 /**
@@ -970,8 +1409,10 @@ async function answer({ id, request }) {
       console.warn(`PHP ${response.httpStatusCode} for ${request.method} ${request.url}`, response.errors, response.text.slice(0, 500));
     }
 
+    updateMediaOverrides();
     channel.postMessage({ type: 'response', id, status: response.httpStatusCode, headers: response.headers, body: response.bytes });
   } catch (error) {
+    updateMediaOverrides();
     channel.postMessage({
       type: 'response',
       id,
