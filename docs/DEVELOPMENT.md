@@ -59,7 +59,7 @@ Then open http://localhost:5400/.
   (`bin/build-browser-bundles.php`). It downloads Full Packages missing from `.cache/`, installs each, and packs
   it for the browser in `web/public/joomla/<version>/`. `web/public/joomla/versions.json` lists them.
   `--version=<version>` rebuilds one.
-- It also builds the nightly builds of Joomla's development branches (developer.joomla.org/nightly-builds.html):
+- It also builds the nightly builds of Joomla's development branches (as Joomla's update server lists them, update.joomla.org/core/nightlies; developer.joomla.org/nightly-builds.html when it lists none):
   the next minor version after the default (6.3-dev), and the branch of each version in the list (6.2-dev,
   5.4-dev) when its nightly build is newer than the release. `--version=development` rebuilds those,
   `--no-development` skips them.

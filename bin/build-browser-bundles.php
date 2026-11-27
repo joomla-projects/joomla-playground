@@ -7,8 +7,8 @@
  * Builds a browser bundle (bin/build-browser-bundle.php) for every Joomla version in joomla-versions.json, and the
  * list the playground chooses from.
  *
- * Besides the releases, there are bundles of the development branches, from their nightly builds on
- * https://developer.joomla.org/nightly-builds.html:
+ * Besides the releases, there are bundles of the development branches, from their nightly builds (listed by Joomla's
+ * update server, update.joomla.org/core/nightlies, and on https://developer.joomla.org/nightly-builds.html):
  * - the development branch: the next minor version after the default (6.2.0 -> 6.3-dev). Most pull requests of
  *   joomla-cms are for that branch. When the next minor version is released and becomes the default
  *   (scripts/update-joomla-versions.mjs), it moves on to the minor version after it.
@@ -149,27 +149,35 @@ echo "\nBundles: " . implode(', ', $all) . ' (default ' . $list['default'] . ")\
  */
 function developmentBranches(array $list): array
 {
-    // The page may fail now and then, or come without the list (seen once on GitHub Actions): try three times.
-    $source  = 'https://developer.joomla.org/nightly-builds.html';
-    $context = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Joomla Playground build (https://github.com/joomla-projects/joomla-playground)']]);
-    $pattern = '#https://developer\.joomla\.org/nightlies/Joomla_((\d+)\.(\d+)\.(\d+)[^"/]*)-Development-Full_Package\.zip#';
+    // The nightly builds Joomla's update server offers (next patch, minor and major version), as Joomla Update gets
+    // them. The page on developer.joomla.org lists them too, but GitHub Actions sometimes gets a "One moment,
+    // please..." bot check instead; it is only asked when the update server gives none. Each is tried three times.
+    $context  = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Joomla Playground build (https://github.com/joomla-projects/joomla-playground)']]);
+    $source   = 'https://update.joomla.org/core/nightlies/';
+    $versions = [];
 
-    for ($attempt = 1; ; $attempt++) {
-        $page    = @file_get_contents($source, false, $context);
-        $matches = [];
+    foreach (['patch', 'minor', 'major'] as $next) {
+        $versions = [...$versions, ...nightlyVersions($source . 'next_' . $next . '_list.xml', $context)];
+    }
 
-        if ($page !== false && preg_match_all($pattern, $page, $matches, PREG_SET_ORDER)) {
-            break;
-        }
+    if (!$versions) {
+        $source = 'https://developer.joomla.org/nightly-builds.html';
+        echo "  No nightly builds from the update server; trying $source\n";
+        $versions = nightlyVersions($source, $context);
+    }
 
-        $what = $page === false ? 'no answer' : \strlen($page) . ' bytes without nightly builds: ' . substr(preg_replace('/\s+/', ' ', strip_tags($page)), 0, 200);
+    if (!$versions) {
+        fail("No nightly builds from the update server nor $source (--no-development builds without the development branches)");
+    }
 
-        if ($attempt === 3) {
-            fail("$source: $what (--no-development builds without the development branches)");
-        }
+    // The newest nightly build of each minor version.
+    usort($versions, static fn (string $a, string $b): int => version_compare($b, $a));
 
-        echo "  $source: $what; trying again in 20 seconds\n";
-        sleep(20);
+    $matches = [];
+
+    foreach (array_unique($versions) as $version) {
+        preg_match('/^(\d+)\.(\d+)\.(\d+)/', $version, $number);
+        $matches[] = ["https://developer.joomla.org/nightlies/Joomla_$version-Development-Full_Package.zip", $version, $number[1], $number[2], $number[3]];
     }
 
     $nightlies = [];
@@ -220,11 +228,59 @@ function developmentBranches(array $list): array
     }, $branches);
 }
 
+/**
+ * The versions of the nightly builds (6.3.0-alpha2-dev, 5.4.12-dev) on a list of the update server or on the nightly
+ * builds page; none when it has none after three tries.
+ *
+ * @param   resource  $context
+ *
+ * @return  list<string>
+ */
+function nightlyVersions(string $url, $context): array
+{
+    $pattern = str_ends_with($url, '.xml')
+        ? '#version="(\d+\.\d+\.\d+[^"/]*-dev)"#'
+        : '#https://developer\.joomla\.org/nightlies/Joomla_(\d+\.\d+\.\d+[^"/]*)-Development-Full_Package\.zip#';
+
+    for ($attempt = 1; $attempt <= 3; $attempt++) {
+        $page = @file_get_contents($url, false, $context);
+
+        if ($page !== false && preg_match_all($pattern, $page, $matches)) {
+            return array_values(array_unique($matches[1]));
+        }
+
+        $what = $page === false ? 'no answer' : \strlen($page) . ' bytes without nightly builds: ' . substr(preg_replace('/\s+/', ' ', strip_tags($page)), 0, 200);
+        echo "  $url: $what" . ($attempt < 3 ? '; trying again in 20 seconds' : '') . "\n";
+        $attempt < 3 && sleep(20);
+    }
+
+    return [];
+}
+
+/**
+ * Downloads a zip, three tries; a page instead of a zip (a bot check, an error page) does not count.
+ */
 function download(string $url, string $file): void
 {
     echo "== Downloading $url\n";
     is_dir(\dirname($file)) || mkdir(\dirname($file), 0755, true);
-    copy($url, $file . '.part') && rename($file . '.part', $file) || fail('Cannot download ' . $url);
+
+    for ($attempt = 1; $attempt <= 3; $attempt++) {
+        if (@copy($url, $file . '.part') && file_get_contents($file . '.part', false, null, 0, 4) === "PK\x03\x04") {
+            rename($file . '.part', $file);
+
+            return;
+        }
+
+        @unlink($file . '.part');
+
+        if ($attempt < 3) {
+            echo "  No zip from $url; trying again in 20 seconds\n";
+            sleep(20);
+        }
+    }
+
+    fail('Cannot download ' . $url);
 }
 
 function fail(string $message): never
