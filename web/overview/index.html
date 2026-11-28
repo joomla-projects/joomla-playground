@@ -438,9 +438,20 @@
         <button type="submit">Test it</button>
       </form>
       <p class="muted">As a link: <code>…/joomla-playground/?pr=48831</code>, with <code>&amp;url=</code> for the page,
-        e.g. <code>?pr=48831&amp;url=/administrator/index.php?option=com_config</code>. Changes to JavaScript or CSS
-        (in <code>build/media_source</code>) are not built, so only PHP, template, language and XML changes show. See
-        the <a href="https://github.com/joomla/joomla-cms/pulls">open pull requests</a>.</p>
+        e.g. <code>?pr=48831&amp;url=/administrator/index.php?option=com_config</code>. The Patch Tester applies the
+        pull request's files as they are: changes to JavaScript or CSS (in <code>build/media_source</code>) are not
+        built, so for those see below. See the <a href="https://github.com/joomla/joomla-cms/pulls">open pull
+        requests</a>.</p>
+      <h3>Pull requests that need a build</h3>
+      <p>A pull request labelled <em>NPM Resource Changed</em> or <em>Composer Dependency Changed</em> only works
+        after a build, so the Patch Tester can't test it. Start it the same way, with <code>?pr=</code> (for example
+        <a href="../?pr=48901"><code>?pr=48901</code></a>): the toolbar then shows a link to the pull request on
+        GitHub and <strong>Apply build</strong>. It lays the package that Joomla's CI built for the pull request over
+        the site, downloading only the files that differ; <strong>Revert build</strong> takes them out again. On
+        GitHub this package is the <strong>Download</strong> link in the list of checks. The CI keeps it for about
+        two weeks; without it, or for a branch the playground doesn't have, you get the Patch Tester with a note.
+        When the pull request is behind its branch, the playground says so: the build also takes the files that
+        changed since then back to the pull request's state.</p>
       <h3>A GitHub token</h3>
       <p>Without a token, GitHub allows the Patch Tester 60 requests an hour; one <strong>Fetch Data</strong> uses
         about four. Click <strong>GitHub token…</strong> in the playground's toolbar and enter one: this browser
@@ -565,7 +576,8 @@
               <tr><td><code>blueprint-url</code></td><td><code>?blueprint-url=https://example.org/blueprint.json</code></td><td>Set up the site with a blueprint</td></tr>
               <tr><td><code>blueprint</code></td><td><code>?blueprint=heritage-demo</code></td><td>Set up the site with one of the playground's own blueprints (from its prebuilt copy, if it has one)</td></tr>
               <tr><td><code>fresh</code></td><td><code>?blueprint=heritage-demo&amp;fresh=1</code></td><td>Run the blueprint, even if there is a prebuilt copy</td></tr>
-              <tr><td><code>pr</code></td><td><code>?pr=48831</code></td><td>Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it</td></tr>
+              <tr><td><code>pr</code></td><td><code>?pr=48831</code></td><td>Test a pull request of joomla-cms: the Patch Tester, and a button to apply and revert it; for a pull request that needs a build, the build of Joomla's CI instead</td></tr>
+              <tr><td><code>method</code></td><td><code>?pr=48901&amp;method=package</code></td><td>How <code>pr</code> is tested: <code>package</code> (the build of Joomla's CI) or <code>patchtester</code></td></tr>
               <tr><td><code>new</code></td><td><code>?new</code></td><td>An empty playground (the address without parameters is this overview)</td></tr>
             </tbody>
           </table>
